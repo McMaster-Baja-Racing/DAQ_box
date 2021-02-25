@@ -1,2 +1,3 @@
 # DAQ_box
-A box of DAQ
+
+Repo for McMaster Baja Racing's 2021 data aquisition software.
