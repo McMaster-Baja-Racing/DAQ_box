@@ -1,22 +1,7 @@
 /**************************************************************************
   Author: DAQ Team
   Created on: 16/10/2020
-  Modified by:
-  Modified on:
 **************************************************************************/
-// NEOPIXEL BEST PRACTICES for most reliable operation:
-// - Add 1000 uF CAPACITOR between NeoPixel strip's + and - connections.
-// - MINIMIZE WIRING LENGTH between microcontroller board and first pixel.
-// - NeoPixel strip's DATA-IN should pass through a 300-500 OHM RESISTOR.
-// - AVOID connecting Neostrip on a LIVE CIRCUIT. If you must, ALWAYS
-//   connect GROUND (-) first, then +, then data.// (Green Red Blue) format {NOT RGB}
-// (0,   255,   0) red
-// (158, 255,   0) orange
-// (255, 255,   0) yellow
-// (255,   0,   0) green
-// (  0,   0, 255) blue
-// (  0, 255, 255) purple
-
 #include <Adafruit_NeoPixel.h>
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
@@ -25,23 +10,27 @@
 #include <Adafruit_GPS.h>
 #include <SoftwareSerial.h>
 
-SoftwareSerial mySerial(8, 7);
-Adafruit_GPS GPS(&mySerial);
+// HUD
+#define LED_PIN    6
+#define LED_COUNT  10
+#define BRIGHTNESS 25
+#define INTERVAL   100  // Period in milliseconds for each LED update
 
-
-#define VOLT_PIN  A6
-#define RELAY_PIN 4
-#define HALL_PIN 5
-#define LED_PIN 6
-#define LED_COUNT 10
-#define LED_INTERVAL 100  // Period in milliseconds for each LED update
+// BOX
 #define BATT_INTERVAL 1000
 #define IMU_INTERVAL 100 
 #define GPS_INTERVAL 1000
 #define GPSECHO  false
 #define HALL_THRESH 10
 #define POT A2
+#define VOLT_PIN  A6
+#define RELAY_PIN 4
+#define HALL_PIN 5
 
+SoftwareSerial mySerial(8, 7);
+Adafruit_GPS GPS(&mySerial);
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 unsigned long battTimer = millis();
 unsigned long ledTimer = millis();
@@ -50,21 +39,19 @@ unsigned long start = micros();
 unsigned long end_time = micros();
 unsigned long past_time = micros();
 uint32_t gpsTimer = millis();
-int ledsOn = 0;
+
 bool gpsPrint = true;
 float hall_count = 0;
 bool on_state = false;
 uint16_t rpm = 2600;
 
-Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
-//   NEO_KHZ800  800 KHz bitstream (most NeoPixel products w/WS2812 LEDs)
-//   NEO_GRB     strip are wired for GRB bitstream (most NeoPixel products)
-
-Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
-
+// Declare function for setting pixel colours
+void setColour(int8_t edge); // turns off LEDs from (start to LED_COUNT)
 
 void setup() {
   Serial.begin(115200);
+  while(!Serial){delay(10);} // Wait until Serial is ready
+
   pinMode(RELAY_PIN, OUTPUT);
   pinMode(HALL_PIN, INPUT);
   delay(1000);
@@ -78,11 +65,11 @@ void setup() {
   }
   //bno.setExtCrystalUse(true);
 
-  
+
   strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   strip.show();            // Turn OFF all strip ASAP
-  strip.setBrightness(100); // Set BRIGHTNESS (max = 255)
-  delay(1000);
+  strip.setBrightness(BRIGHTNESS); // Set BRIGHTNESS (max = 255)
+  delay(500);
 
   GPS.begin(9600);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
@@ -92,17 +79,10 @@ void setup() {
   mySerial.println(PMTK_Q_RELEASE);
 }
 
-void lights(uint8_t edge);
-
-
-
-
-
 void loop() {
-  //delay(1);
   int jump = 99;
   int rpm = 2600;
-//  //-------------Hall Sensor--------------------
+//  //-------------Hall Effect Sensor--------------------
 //  
 //  // counting number of times the hall sensor is tripped
 //  // but without double counting during the same trip
@@ -132,8 +112,6 @@ void loop() {
 //    start = micros();
 //  }
 
-
-
   //-------------Battery Check---------------
   if (millis() - battTimer > BATT_INTERVAL){
     battTimer = millis();
@@ -144,64 +122,26 @@ void loop() {
       digitalWrite(RELAY_PIN, LOW);
     }
   }
-  
 
    //-------------LED Strip---------------------
   if (millis() - ledTimer > LED_INTERVAL){
     ledTimer = millis();
     
-    
-//    if (ledsOn < LED_COUNT){
-//      strip.setPixelColor(ledsOn, strip.Color(150, 150, 0));
-//      strip.show();
-//      ledsOn = ledsOn + 1; 
-//    }
-//    else{
-//      strip.clear();
-//      ledsOn = 0;
-//    }
-    if( rpm < 1500 ){
-      lights(0);
-    }
-    else if( (rpm > 1500) && (rpm < 2100) ){   
-      lights(1);
-    }
-    else if( (rpm > 2100) && (rpm < 2400) ){    
-      lights(2);
-    }
-    else if( (rpm > 2400) && (rpm < 2600) ){    
-      lights(3);
-    }
-    else if( (rpm > 2600) && (rpm < 2800) ){    
-      lights(4);
-    }
-    else if( (rpm > 2800) && (rpm < 3000) ){    
-      lights(5);
-    }
-    else if( (rpm > 3000) && (rpm < 3200) ){    
-      lights(6);
-    }
-    else if( (rpm > 3200) && (rpm < 3400) ){    
-      lights(7);
-    }
-    else if( (rpm > 3400) && (rpm < 3600) ){    
-      lights(8);
-    }
-    else if( (rpm > 3600) && (rpm < 3800) ){    
-      lights(9);
-    }
-    else if( rpm > 3800 ){                      
-      lights(9);
-    }
-    else{         
-      lights(0);  // error default
-    }
-    
+    if( rpm > 3800 )                       {setColour(9);}
+    else if( (rpm > 3600) && (rpm < 3800) ){setColour(8);}
+    else if( (rpm > 3400) && (rpm < 3600) ){setColour(7);}
+    else if( (rpm > 3200) && (rpm < 3400) ){setColour(6);}
+    else if( (rpm > 3000) && (rpm < 3200) ){setColour(5);}
+    else if( (rpm > 2800) && (rpm < 3000) ){setColour(4);}
+    else if( (rpm > 2600) && (rpm < 2800) ){setColour(3);}
+    else if( (rpm > 2400) && (rpm < 2600) ){setColour(2);}
+    else if( (rpm > 2100) && (rpm < 2400) ){setColour(1);}
+    else if( (rpm > 1800) && (rpm < 2100) ){setColour(0);}
+    else if( rpm < 1800 )                  {setColour(-1);}
+    else                                   {setColour(-1);}  // error/default
     strip.show();   // Send the updated pixel colors to the hardware.
   }
 
-
-  
 //  //----------------------GPS--------------------------------
 //  char c = GPS.read();
 //  // if you want to debug, this is a good time to do it!
@@ -288,17 +228,17 @@ void loop() {
 //  }
 }
 
-void lights(uint8_t edge){
-    uint8_t G[10] = {  0, 158, 222, 222, 255, 255, 255, 255, 128,  51};
-    uint8_t R[10] = {255, 255, 255, 255, 255, 255, 196,   0,   0, 153};
-    uint8_t B[10] = {  0,   0,   0,   0,   0,   0,   0,   0, 255, 255};
-    uint8_t i = 0;
-    
-    for(i=0; i<edge; i++){
-      strip.setPixelColor(i, strip.Color(G[i], R[i], B[i]));
-    }
+void setColour(int8_t edge)
+{
+  // Set all setColour to off/0
+  strip.clear();
 
-    for(; i<LED_COUNT; i++){
-      strip.setPixelColor(i, strip.Color(0, 0, 0));
-    }
+  const uint8_t R[10] = {255, 255, 255, 255, 255, 255, 100,   0,   0,  75};
+  const uint8_t G[10] = {  0,  80, 150, 200, 200, 235, 255, 255,   0,   0};
+  const uint8_t B[10] = {  0,   0,   0,   0,   0,   0,   0,   0, 255, 255};
+  
+  //Set pixel colour up to strip[edge]
+  for(uint8_t i=0; i<=edge; i++){
+    strip.setPixelColor(i, strip.Color(R[i], G[i], B[i]));
+  }
 }
