@@ -11,10 +11,10 @@
 #include <SoftwareSerial.h>
 
 // HUD
-#define LED_PIN    6
-#define LED_COUNT  10
-#define BRIGHTNESS 25
-#define INTERVAL   100  // Period in milliseconds for each LED update
+#define LED_PIN    6      // Digital Pin 6 for LED's
+#define LED_COUNT  10     // 2 x 5 LED strip
+#define BRIGHTNESS 25     // Max brightness = 255
+#define LED_INTERVAL 100  // Period in msec for LED update (larger than 100 produces noticable lag)
 
 // BOX
 #define BATT_INTERVAL 1000
@@ -27,6 +27,8 @@
 #define RELAY_PIN 4
 #define HALL_PIN 5
 
+/***  Start of Global variables  ***/
+/***********************************/
 SoftwareSerial mySerial(8, 7);
 Adafruit_GPS GPS(&mySerial);
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
@@ -44,6 +46,9 @@ bool gpsPrint = true;
 float hall_count = 0;
 bool on_state = false;
 uint16_t rpm = 2600;
+
+/***  End of Global variables  ***/
+/*********************************/
 
 // Declare function for setting pixel colours
 void setColour(int8_t edge); // turns off LEDs from (start to LED_COUNT)
@@ -69,7 +74,7 @@ void setup() {
   strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   strip.show();            // Turn OFF all strip ASAP
   strip.setBrightness(BRIGHTNESS); // Set BRIGHTNESS (max = 255)
-  delay(500);
+  delay(50);
 
   GPS.begin(9600);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
