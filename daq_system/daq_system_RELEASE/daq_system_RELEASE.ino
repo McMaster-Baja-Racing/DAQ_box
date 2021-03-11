@@ -29,7 +29,7 @@
 
 /***  Start of Global variables  ***/
 /***********************************/
-Adafruit_GPS GPS(&mySerial);
+Adafruit_GPS GPS(&Serial);
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
@@ -40,11 +40,9 @@ unsigned long start = micros();
 unsigned long end_time = micros();
 unsigned long past_time = micros();
 uint32_t gpsTimer = millis();
-
-bool gpsPrint = true;
-float hall_count = 0;
+uint16_t hall_count = 0;
 bool on_state = false;
-uint16_t rpm = 2600;
+uint16_t rpm = 0;
 
 /***  End of Global variables  ***/
 /*********************************/
@@ -53,24 +51,33 @@ uint16_t rpm = 2600;
 void setColour(int8_t edge); // turns off LEDs from (start to LED_COUNT)
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(RELAY_PIN, OUTPUT);
   pinMode(HALL_PIN, INPUT);
   delay(1000);
   digitalWrite(RELAY_PIN, HIGH);
   delay(2000);
 
-   if(!bno.begin()) {while(1);}
+  // If IMU fails to intilize blink at 10 Hz
+  if(!bno.begin()) {
+    while(1) {
+      digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+      delay(100);                       // wait for a second/10
+      digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+      delay(100);                      
+    }
+  }
 
   strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   strip.show();            // Turn OFF all strip ASAP
   strip.setBrightness(BRIGHTNESS); // Set BRIGHTNESS (max = 255)
   delay(50);
 
-  GPS.begin(9600);
+  GPS.begin(115200);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
   delay(1000);
-  mySerial.println(PMTK_Q_RELEASE);
+  Serial.println(PMTK_Q_RELEASE);
 }
 
 void loop() {
@@ -90,7 +97,7 @@ void loop() {
  if (hall_count > HALL_THRESH){
    end_time = micros();
    past_time = (end_time-start);
-   rpm = (hall_count*1000000/past_time)*60;
+   rpm = (uint16_t)(hall_count*1000000/past_time)*60.0;
    hall_count = 0;
    start = micros();
  }
