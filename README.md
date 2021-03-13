@@ -1,3 +1,13 @@
 # DAQ_box
 
-Repo for McMaster Baja Racing's 2021 data aquisition software.
+```
+ ───DAQ_box
+    ├───daq_system
+    │   ├───daq_system_DEBUG
+    │   └───daq_system_RELEASE
+    ├───HUD
+    │   ├───HUD_10LED_RPM
+    │   └───neopixel_colour_tuning
+    └───IMU
+        └───restore_offsets
+```
