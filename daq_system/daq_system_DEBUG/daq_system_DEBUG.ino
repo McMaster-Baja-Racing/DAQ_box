@@ -2,13 +2,15 @@
   Author: DAQ Team
   Created on: 16/10/2020
 **************************************************************************/
-#include <Adafruit_NeoPixel.h>
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
+#include <Adafruit_NeoPixel.h>
 #include <utility/imumaths.h>
 #include <Adafruit_GPS.h>
 #include <SoftwareSerial.h>
+
+#include <stlport.h>
 
 // HUD
 #define LED_PIN    6      // Digital Pin 6 for LED's
@@ -147,90 +149,90 @@ void loop() {
     strip.show();   // Send the updated pixel colors to the hardware.
   }
 
-//  //----------------------GPS--------------------------------
-//  char c = GPS.read();
-//  // if you want to debug, this is a good time to do it!
-//  if ((c) && (GPSECHO))
-//    Serial.write(c);
-//
-//  // if a sentence is received, we can check the checksum, parse it...
-//  if (GPS.newNMEAreceived()) {
-//    // a tricky thing here is if we print the NMEA sentence, or data
-//    // we end up not listening and catching other sentences!
-//    // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
-//    //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
-//
-//    if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
-//      return;  // we can fail to parse a sentence in which case we should just wait for another
-//  }
-//
-//  //-----------------IMU--------------------------------------
-//  if (millis() - imuTimer > IMU_INTERVAL){
-//    imuTimer = millis();
-//
-//    Serial.print(F("\n"));
-//    //Serial.print(F("\nTime: "));
-//    Serial.print(imuTimer);
-//    Serial.print(F(", "));
-//    
-//    sensors_event_t event;
-//    bno.getEvent(&event); 
-//    //Serial.print(F("Orientation: "));
-//    Serial.print((float)event.orientation.x);
-//    Serial.print(F(", "));
-//    Serial.print((float)event.orientation.y);
-//    Serial.print(F(", "));
-//    Serial.print((float)event.orientation.z);
-//    Serial.print(F(", "));
-//    
-//    imu::Vector<3> accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
-//    Serial.print(accel.x());
-//    Serial.print(", ");
-//    Serial.print(accel.y());
-//    Serial.print(", ");
-//    Serial.print(accel.z());
-//    Serial.print(", ");
-//  }
-//  if (millis() - gpsTimer > GPS_INTERVAL) {
-//    gpsTimer = millis(); // reset the timer
-//
-////    Serial.print("\nTime: ");
-////    if (GPS.hour < 10) { Serial.print('0'); }
-////    Serial.print(GPS.hour, DEC); Serial.print(':');
-////    if (GPS.minute < 10) { Serial.print('0'); }
-////    Serial.print(GPS.minute, DEC); Serial.print(':');
-////    if (GPS.seconds < 10) { Serial.print('0'); }
-////    Serial.print(GPS.seconds, DEC); Serial.print('.');
-////    if (GPS.milliseconds < 10) {
-////      Serial.print("00");
-////    } else if (GPS.milliseconds > 9 && GPS.milliseconds < 100) {
-////      Serial.print("0");
-////    }
-////    Serial.println(GPS.milliseconds);
-////    Serial.print("Date: ");
-////    Serial.print(GPS.day, DEC); Serial.print('/');
-////    Serial.print(GPS.month, DEC); Serial.print("/20");
-////    Serial.println(GPS.year, DEC);
-//    if (GPS.fix) {
-//      //Serial.print("  Location: ");
-//      Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
-//      Serial.print(", ");
-//      Serial.print(GPS.longitude, 4); Serial.print(GPS.lon);
-//      Serial.print(", ");
-//      //Serial.print("  Speed (knots): "); 
-//      Serial.print(GPS.speed);
-//      Serial.print(", ");
-//      Serial.print("  Angle: "); Serial.print(GPS.angle);
-//      Serial.print(", ");
-//      Serial.print("  Altitude: "); Serial.print(GPS.altitude);
-//      Serial.print(", ");
-//      Serial.print("  Satellites: "); Serial.print((int)GPS.satellites);
+  //----------------------GPS--------------------------------
+  char c = GPS.read();
+  // if you want to debug, this is a good time to do it!
+  if ((c) && (GPSECHO))
+    Serial.write(c);
+
+  // if a sentence is received, we can check the checksum, parse it...
+  if (GPS.newNMEAreceived()) {
+    // a tricky thing here is if we print the NMEA sentence, or data
+    // we end up not listening and catching other sentences!
+    // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
+    //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
+
+    if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
+      return;  // we can fail to parse a sentence in which case we should just wait for another
+  }
+
+  //-----------------IMU--------------------------------------
+  if (millis() - imuTimer > IMU_INTERVAL){
+    imuTimer = millis();
+
+    Serial.print(F("\n"));
+    //Serial.print(F("\nTime: "));
+    Serial.print(imuTimer);
+    Serial.print(F(", "));
+    
+    sensors_event_t event;
+    bno.getEvent(&event); 
+    //Serial.print(F("Orientation: "));
+    Serial.print((float)event.orientation.x);
+    Serial.print(F(", "));
+    Serial.print((float)event.orientation.y);
+    Serial.print(F(", "));
+    Serial.print((float)event.orientation.z);
+    Serial.print(F(", "));
+    
+    imu::Vector<3> accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
+    Serial.print(accel.x());
+    Serial.print(", ");
+    Serial.print(accel.y());
+    Serial.print(", ");
+    Serial.print(accel.z());
+    Serial.print(", ");
+  }
+  if (millis() - gpsTimer > GPS_INTERVAL) {
+    gpsTimer = millis(); // reset the timer
+
+//    Serial.print("\nTime: ");
+//    if (GPS.hour < 10) { Serial.print('0'); }
+//    Serial.print(GPS.hour, DEC); Serial.print(':');
+//    if (GPS.minute < 10) { Serial.print('0'); }
+//    Serial.print(GPS.minute, DEC); Serial.print(':');
+//    if (GPS.seconds < 10) { Serial.print('0'); }
+//    Serial.print(GPS.seconds, DEC); Serial.print('.');
+//    if (GPS.milliseconds < 10) {
+//      Serial.print("00");
+//    } else if (GPS.milliseconds > 9 && GPS.milliseconds < 100) {
+//      Serial.print("0");
 //    }
-//    else{
-//      Serial.print(" Fix: "); Serial.print((int)GPS.fix);
-//      Serial.print(" quality: "); Serial.print((int)GPS.fixquality);
-//    }
-//  }
+//    Serial.println(GPS.milliseconds);
+//    Serial.print("Date: ");
+//    Serial.print(GPS.day, DEC); Serial.print('/');
+//    Serial.print(GPS.month, DEC); Serial.print("/20");
+//    Serial.println(GPS.year, DEC);
+    if (GPS.fix) {
+      //Serial.print("  Location: ");
+      Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
+      Serial.print(", ");
+      Serial.print(GPS.longitude, 4); Serial.print(GPS.lon);
+      Serial.print(", ");
+      //Serial.print("  Speed (knots): "); 
+      Serial.print(GPS.speed);
+      Serial.print(", ");
+      Serial.print("  Angle: "); Serial.print(GPS.angle);
+      Serial.print(", ");
+      Serial.print("  Altitude: "); Serial.print(GPS.altitude);
+      Serial.print(", ");
+      Serial.print("  Satellites: "); Serial.print((int)GPS.satellites);
+    }
+    else{
+      Serial.print(" Fix: "); Serial.print((int)GPS.fix);
+      Serial.print(" quality: "); Serial.print((int)GPS.fixquality);
+    }
+  }
 }
 
 void setColour(int8_t edge)

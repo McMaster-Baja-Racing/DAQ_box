@@ -1,5 +1,5 @@
 {
     "board": "arduino:avr:uno",
     "programmer": "arduino:avrisp",
-    "sketch": "sdModule.ino"
+    "sketch": "daq_system\\daq_system_DEBUG\\daq_system_DEBUG.ino"
 }
