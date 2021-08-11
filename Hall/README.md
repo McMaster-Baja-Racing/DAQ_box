@@ -1,18 +1,19 @@
 # HALL
 This is a readme for the Hall effect sensor.
-
-![Hall](https://user-images.githubusercontent.com/62113118/128959811-d2c72415-9c3e-4705-9301-e6f85e10d6a2.png)
+<p align="center">
+<img src="https://user-images.githubusercontent.com/62113118/128959811-d2c72415-9c3e-4705-9301-e6f85e10d6a2.png" alt="Hall" width="50%" align="center">
+</p>
 
 ## Parts List
 * Arduino supported microcontroller
-*[Hall Sensor](https://www.littelfuse.com/~/media/electronics/datasheets/hall_effect_sensors/littelfuse_hall_effect_sensors_55100_datasheet.pdf.pdf) (model used is Littlefuse 55100 3H04A 2025)
+* [Hall Sensor](https://www.littelfuse.com/~/media/electronics/datasheets/hall_effect_sensors/littelfuse_hall_effect_sensors_55100_datasheet.pdf.pdf) (model used is Littlefuse 55100 3H04A 2025)
 * Magnet
 * Pull-up Resistor (250+ Ohms)
 * Ceramic capacitor (100nF, optional)
 
 ## Wiring
 
-Refer to the [Hall sensor datasheet]((https://www.littelfuse.com/~/media/electronics/datasheets/hall_effect_sensors/littelfuse_hall_effect_sensors_55100_datasheet.pdf.pdf) for information on wiring.
+Refer to the [Hall sensor datasheet](https://www.littelfuse.com/~/media/electronics/datasheets/hall_effect_sensors/littelfuse_hall_effect_sensors_55100_datasheet.pdf.pdf) for information on wiring.
 
 The three wire version of the Hall sensor is used in this example.
 Red - VDD  
