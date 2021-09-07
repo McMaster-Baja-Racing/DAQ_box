@@ -3,14 +3,18 @@
   Created on: 16/10/2020
 **************************************************************************/
 #include <Wire.h>
+// For IMU
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
-#include <Adafruit_NeoPixel.h>
 #include <utility/imumaths.h>
+// For GPS
 #include <Adafruit_GPS.h>
 #include <SoftwareSerial.h>
-
-#include <stlport.h>
+// For display
+#include <Adafruit_NeoPixel.h>
+// For SD Card
+#include <SPI.h>
+#include <SD.h>
 
 // HUD
 #define LED_PIN    6      // Digital Pin 6 for LED's
@@ -20,9 +24,8 @@
 
 // BOX
 #define BATT_INTERVAL 1000
-#define IMU_INTERVAL 100 
-#define GPS_INTERVAL 1000
-#define GPSECHO  false
+#define IMU_INTERVAL 200 // ms
+#define GPS_INTERVAL 1000 // ms (Should be multiple of IMU_INTERVAL)
 #define HALL_THRESH 10
 #define POT A2
 #define VOLT_PIN  A6
@@ -31,8 +34,9 @@
 
 /***  Start of Global variables  ***/
 /***********************************/
-SoftwareSerial mySerial(8, 7);
-Adafruit_GPS GPS(&mySerial);
+//SoftwareSerial GPSSerial(8, 7); // GPS uses software serial and can't send to board
+#define GPSSerial Serial1
+Adafruit_GPS GPS(&GPSSerial);
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
@@ -44,10 +48,17 @@ unsigned long end_time = micros();
 unsigned long past_time = micros();
 uint32_t gpsTimer = millis();
 
-bool gpsPrint = true;
+bool gps_timesend = false;
+bool gps_goodmessage = false;
+bool send_data = false;
+bool gps_active = false;
 float hall_count = 0;
 bool on_state = false;
 uint16_t rpm = 2600;
+
+const int chipSelect = 4;
+
+#define USE_SD
 
 /***  End of Global variables  ***/
 /*********************************/
@@ -56,6 +67,7 @@ uint16_t rpm = 2600;
 void setColour(int8_t edge); // turns off LEDs from (start to LED_COUNT)
 
 void setup() {
+  //Set up serial
   Serial.begin(115200);
   while(!Serial){delay(10);} // Wait until Serial is ready
 
@@ -65,31 +77,53 @@ void setup() {
   digitalWrite(RELAY_PIN, HIGH);
   delay(2000);
 
-   if(!bno.begin()) {
-    /* There was a problem detecting the BNO055 ... check your connections */
+  // Set up imu
+  if(!bno.begin()) {
+    // There was a problem detecting the BNO055 ... check your connections
     Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
     while(1);
   }
-  //bno.setExtCrystalUse(true);
 
+#ifdef USE_SD
+  // SD Card Setup
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Card failed, or not present");
+    // don't do anything more:
+    while (1);
+  }
+  Serial.println("card initialized.");
 
+  if (SD.exists("data.txt")) {
+    SD.remove("data.txt"); // Delete old file
+  }
+  File bajaData = SD.open("data.txt", FILE_WRITE); // Create file
+  bajaData.close();
+#endif
+
+  // Set up led strip
   strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   strip.show();            // Turn OFF all strip ASAP
   strip.setBrightness(BRIGHTNESS); // Set BRIGHTNESS (max = 255)
   delay(50);
 
+  
+  // Set up GPS
   GPS.begin(9600);
+  // turn on RMC (recommended minimum) and GGA (fix data) including altitude
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
-  //GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  // Set the update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
   delay(1000);
-  mySerial.println(PMTK_Q_RELEASE);
+  // Ask for firmware version
+  GPSSerial.println(PMTK_Q_RELEASE);
 }
 
 void loop() {
   int jump = 99;
   int rpm = 2600;
-//  //-------------Hall Effect Sensor--------------------
+
+  
+//-------------Hall Effect Sensor--------------------
 //  
 //  // counting number of times the hall sensor is tripped
 //  // but without double counting during the same trip
@@ -119,7 +153,8 @@ void loop() {
 //    start = micros();
 //  }
 
-  //-------------Battery Check---------------
+
+//-------------Battery Check---------------
   if (millis() - battTimer > BATT_INTERVAL){
     battTimer = millis();
     if (analogRead(VOLT_PIN) >= 6.0){
@@ -130,7 +165,8 @@ void loop() {
     }
   }
 
-   //-------------LED Strip---------------------
+
+//-------------LED Strip---------------------
   if (millis() - ledTimer > LED_INTERVAL){
     ledTimer = millis();
     
@@ -149,91 +185,133 @@ void loop() {
     strip.show();   // Send the updated pixel colors to the hardware.
   }
 
+
   //----------------------GPS--------------------------------
-  char c = GPS.read();
-  // if you want to debug, this is a good time to do it!
-  if ((c) && (GPSECHO))
-    Serial.write(c);
 
-  // if a sentence is received, we can check the checksum, parse it...
-  if (GPS.newNMEAreceived()) {
-    // a tricky thing here is if we print the NMEA sentence, or data
-    // we end up not listening and catching other sentences!
-    // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
-    //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
+  // Using the adafruit ultimate gps chip
+  // GPS works on interupt, but we output at reular intervals
+  // https://learn.adafruit.com/adafruit-ultimate-gps
+  // The regular output will output a gps signal that is up to 1 second behind the actual position
+  // There are fixes for this (check GPS_HardwareSerial_Timing), but our current kalman fitler cannot handle aynchronous input
+  // so there isn't any point to fixing it and we have to live with the small time inaccuracy
+  // NMEA is the standard GPS format
+  
+  // read data from the GPS in the 'main loop'
+  char c = GPS.read(); // c is raw gps data
+  if (GPS.newNMEAreceived()) { // Interrupt signal for GPS signal
+    // Do not handle or output data in this section. Only store it.
+    // Me end up not listening and catching other sentences if we do output here
 
-    if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
-      return;  // we can fail to parse a sentence in which case we should just wait for another
+    if (!GPS.parse(GPS.lastNMEA())){  // this also sets the newNMEAreceived() flag to false
+      gps_goodmessage = false;
+    }else{
+      gps_goodmessage = true;
+    }
   }
+
+  if (millis() - gpsTimer > (GPS_INTERVAL-1)){
+    gpsTimer = millis();
+    gps_timesend = true;
+    if(GPS.fix){
+      gps_active = true;
+    }
+  }
+
 
   //-----------------IMU--------------------------------------
-  if (millis() - imuTimer > IMU_INTERVAL){
-    imuTimer = millis();
+  // The chip used is the bno055-absolute-orientation-sensor
+  // https://learn.adafruit.com/adafruit-bno055-absolute-orientation-sensor
+  // The imu of the chip combines its sensor data by itself to a aboslute orientation measurement using the chip hardware
+  // It outputs absolute orientation and auto calibrates
+  // It is recommended to help it calibrate by doing these steps
+  // 1) Gyroscope: keep it still
+  // 2) Magnetometer: Do figure 8 motions in all 3D directions
+  // 3) Accelerometer: placed in 6 standing positions for +X, -X, +Y, -Y, +Z and -Z
+  // We need raw values for the kalman filter though
+  
+  imu::Vector<3> accel;
+  imu::Vector<3> gyro;
+  sensors_event_t event;
+  if (millis() - imuTimer > (IMU_INTERVAL-1)){
+    // Format
+    // Absolute orientation is euler vector (also can output quaternion for if needed)
+    // Acceleration includes gravity (use VECTOR_LINEARACCEL to exclude) and is shows the Three axis of acceleration in (m/s^2)
+    // Gyro is an Angular Velocity Vector measured in (rad/s)
+    // Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gyro X, Gyro Y, Gyro Z
 
-    Serial.print(F("\n"));
-    //Serial.print(F("\nTime: "));
-    Serial.print(imuTimer);
-    Serial.print(F(", "));
-    
-    sensors_event_t event;
+    imuTimer = millis(); // Get time
     bno.getEvent(&event); 
-    //Serial.print(F("Orientation: "));
-    Serial.print((float)event.orientation.x);
-    Serial.print(F(", "));
-    Serial.print((float)event.orientation.y);
-    Serial.print(F(", "));
-    Serial.print((float)event.orientation.z);
-    Serial.print(F(", "));
-    
-    imu::Vector<3> accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
-    Serial.print(accel.x());
-    Serial.print(", ");
-    Serial.print(accel.y());
-    Serial.print(", ");
-    Serial.print(accel.z());
-    Serial.print(", ");
-  }
-  if (millis() - gpsTimer > GPS_INTERVAL) {
-    gpsTimer = millis(); // reset the timer
+    accel = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
+    gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
 
-//    Serial.print("\nTime: ");
-//    if (GPS.hour < 10) { Serial.print('0'); }
-//    Serial.print(GPS.hour, DEC); Serial.print(':');
-//    if (GPS.minute < 10) { Serial.print('0'); }
-//    Serial.print(GPS.minute, DEC); Serial.print(':');
-//    if (GPS.seconds < 10) { Serial.print('0'); }
-//    Serial.print(GPS.seconds, DEC); Serial.print('.');
-//    if (GPS.milliseconds < 10) {
-//      Serial.print("00");
-//    } else if (GPS.milliseconds > 9 && GPS.milliseconds < 100) {
-//      Serial.print("0");
-//    }
-//    Serial.println(GPS.milliseconds);
-//    Serial.print("Date: ");
-//    Serial.print(GPS.day, DEC); Serial.print('/');
-//    Serial.print(GPS.month, DEC); Serial.print("/20");
-//    Serial.println(GPS.year, DEC);
-    if (GPS.fix) {
-      //Serial.print("  Location: ");
-      Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
-      Serial.print(", ");
-      Serial.print(GPS.longitude, 4); Serial.print(GPS.lon);
-      Serial.print(", ");
-      //Serial.print("  Speed (knots): "); 
-      Serial.print(GPS.speed);
-      Serial.print(", ");
-      Serial.print("  Angle: "); Serial.print(GPS.angle);
-      Serial.print(", ");
-      Serial.print("  Altitude: "); Serial.print(GPS.altitude);
-      Serial.print(", ");
-      Serial.print("  Satellites: "); Serial.print((int)GPS.satellites);
+    send_data = true;
+  }
+
+
+//-----------------Send Data--------------------------------------
+
+  String dataString = "";
+  if (send_data && gps_active){
+    // Set up SD Card reader
+#ifdef USE_SD
+    File bajaData = SD.open("data.txt", FILE_WRITE);
+#else
+    bool bajaData = true;
+#endif
+    if (bajaData){
+      // IMU Format
+      // Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gyro X, Gyro Y, Gyro Z
+      // Time
+
+      dataString += String(imuTimer); // Time since in ms
+      dataString += F(",");
+      
+      // Orientation
+      dataString += String((float)event.orientation.x); dataString += F(",");
+      dataString += String((float)event.orientation.y); dataString += F(",");
+      dataString += String((float)event.orientation.z); dataString += F(",");
+     
+      dataString += String(accel.x()); dataString += F(",");
+      dataString += String(accel.y()); dataString += F(",");
+      dataString += String(accel.z()); dataString += F(",");
+  
+      dataString += String(gyro.x()); dataString += F(",");
+      dataString += String(gyro.y()); dataString += F(",");
+      dataString += String(gyro.z()); dataString += F(",");
+  
+      // GPS Format
+      // Please read NMEA documentation to understand
+      // Note that Fix is true or false and GPS Quality Indicator works like this: 0 - fix not available, 1 - GPS fix, 2 - Differential GPS fix
+      // We get signals from GPGGA or GPRMC
+      // Many values have to be converted to be usable (most software wants DD, not DMM)
+      // GPS has its own timer, but due to the need of synchronous input, we have to accept some time inaccuracy and just use the imu timer
+      // HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Altitude (m)(Ellipsoid), Speed (knots), Angle (North is 0 and CW), Satellites
+      if(gps_timesend && gps_goodmessage && GPS.fix){
+        dataString += (int)GPS.fix; dataString += F(",");
+        dataString += String(GPS.latitude,4); dataString += String(GPS.lat); dataString += F(",");
+        dataString += String(GPS.longitude,4); dataString += String(GPS.lon); dataString += F(",");
+        dataString += String(GPS.angle); dataString += F(",");
+        dataString += String(GPS.speed); dataString += F(",");
+        dataString += String(GPS.altitude); dataString += F(",");
+        dataString += String((int)GPS.satellites);
+        gps_timesend = false;
+      }else{
+        //Not GPS placeholder
+        dataString += (int)GPS.fix;
+        dataString += F(",");
+        dataString += "-1,-1,-1,-1,-1,-1";
+      }
+#ifdef USE_SD
+      bajaData.println(dataString);
+      bajaData.close();
+#else
+      Serial.println(dataString);
+#endif
     }
-    else{
-      Serial.print(" Fix: "); Serial.print((int)GPS.fix);
-      Serial.print(" quality: "); Serial.print((int)GPS.fixquality);
-    }
+    send_data = false;
   }
 }
+
 
 void setColour(int8_t edge)
 {
