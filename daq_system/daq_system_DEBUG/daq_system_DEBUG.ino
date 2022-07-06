@@ -11,7 +11,13 @@
  * 
  */
 
-
+//TODO
+//CHANGE DIRECTORY BASED ON CURRENT DAY
+//SECOND IMU
+//Implement status LEDS
+  //Recording LED
+  //If the battery is low LAST LED goes Red 
+//more RPM sensors on inturrepts
 
 
 
@@ -38,13 +44,13 @@
 
 // BOX
 
-#define BATT_INTERVAL 1000
-#define IMU_INTERVAL 200 // ms
-#define GPS_INTERVAL 1000 // ms (Should be multiple of IMU_INTERVAL)
+#define BATT_INTERVAL 400
+#define IMU_INTERVAL 10 // ms
+#define GPS_INTERVAL 100 // ms (Should be multiple of IMU_INTERVAL)
 #define TEMP_INTERVAL 400 // ms (Should be multiple of IMU_INTERVAL)
 #define HALL_THRESH 4
 #define POT A2
-#define VOLT_PIN  A6
+#define VOLT_PIN  A3
 #define RELAY_PIN 4
 #define HALL_PIN 21
 
@@ -55,6 +61,7 @@
 
 /***  Start of Global variables  ***/
 /***********************************/
+#define GPSSerial Serial1
 Adafruit_GPS GPS(&GPSSerial);
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
@@ -89,7 +96,8 @@ bool usePrimI2C = true;
 bool useSecI2C = true;
 
 
-
+float batVoltage = 0;
+int batPercent=0;
 float primaryTemp = 0;
 float primaryTemp_basic=0;
 float secondaryTemp = 0;
@@ -229,10 +237,10 @@ void setup() {
      strip.setPixelColor(4,strip.Color(0,255,0));
   }
   strip.show();
-  // turn on RMC (recommended minimum) and GGA (fix data) including altitude
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  // turn on turn on only the "minimum recommended" data
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   // Set the update rate
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ); // 1 Hz update rate
  
   delay(1000);
   
@@ -278,7 +286,11 @@ void loop() {
   //-------------Battery Check---------------
   if (millis() - battTimer > BATT_INTERVAL) {
     battTimer = millis();
-    if (analogRead(VOLT_PIN) >= 6.0) {
+    batVoltage=analogRead(VOLT_PIN);
+    batPercent=map(batVoltage,660,750,0,100);
+    batVoltage=(((batVoltage/1024)*4.3)*(16))/6;
+    
+    if (batVoltage >= 6.0) {
       digitalWrite(RELAY_PIN, HIGH);
     }
     else {
@@ -292,7 +304,7 @@ void loop() {
     ledTimer = millis();
     if (showRPM){
       int numLED=map(rpm,1800,3800,-1,9);
-      if (numLED>9){
+      if (numLED>9){w
         numLED=9;
       }
       setColour(numLED);
@@ -352,7 +364,7 @@ void loop() {
           // don't do anything more:
           while (1);
         }
-        bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Altitude (m)(Ellipsoid, Satellites, Date + Time,Primary Temp (i2c), Secondary Temp(i2c), Primary Temp Basic, Secondary Temp Basic,Speed (Km/h)");
+        bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time,Primary Temp i2c, Secondary Temp i2c, Primary Temp Basic, Secondary Temp Basic, Speed (Km/h),Battery Percentage, Battery Voltage");
         bajaData.close();
         gps_flash=true;
         for (int i = 0; i<LED_COUNT;i++){
@@ -361,7 +373,7 @@ void loop() {
       }
       else{
         if (gps_flash=true){
-          strip.setPixelColor(9,strip.Color(255, 0, 0));
+          strip.setPixelColor(9,strip.Color(0, 255, 0));
           gps_flash=false;
         }
         else{
@@ -473,7 +485,7 @@ void loop() {
       // We get signals from GPGGA or GPRMC
       // Many values have to be converted to be usable (most software wants DD, not DMM)
       // GPS has its own timer, but due to the need of synchronous input, we have to accept some time inaccuracy and just use the imu timer
-      // HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Altitude (m)(Ellipsoid, Satellites, Date + Time
+      // HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time
       if (gps_timesend && gps_goodmessage && GPS.fix) {
 
         #ifdef USE_GPS_SPEED
@@ -485,8 +497,6 @@ void loop() {
         dataString += String(GPS.longitude, 4); dataString += String(GPS.lon); dataString += F(",");
         dataString += String(GPS.angle); dataString += F(",");
         dataString += String(GPS.speed); dataString += F(",");
-        dataString += String(GPS.altitude); dataString += F(",");
-        dataString += String((int)GPS.satellites); dataString += F(",");
         dataString += String(GPS.day) + "-" + String(GPS.month) + "-" + String(GPS.year) + " " + String(GPS.hour) + "-" + String(GPS.minute) + "-" + String(GPS.seconds)+" "+String(GPS.milliseconds); dataString += F(",");
         gps_timesend = false;
       } else {
@@ -499,12 +509,14 @@ void loop() {
 
 
       
-      //Primary Temp i2c, Secondary Temp i2c, Primary Temp Basic, Secondary Temp Basic, Speed (Km/h)
+      //Primary Temp i2c, Secondary Temp i2c, Primary Temp Basic, Secondary Temp Basic, Speed (Km/h),Battery Percentage, Battery Voltage
       dataString += String(primaryTemp); dataString += F(",");
       dataString += String(secondaryTemp); dataString += F(",");
       dataString += String(primaryTemp_basic); dataString += F(",");
       dataString += String(secondaryTemp_basic); dataString += F(",");
-      dataString += String(spd);
+      dataString += String(spd);dataString += F(",");
+      dataString += String(batPercent); dataString += F(",");
+      dataString += String(batVoltage); 
 
    if(USE_SD){
       bajaData.println(dataString);
