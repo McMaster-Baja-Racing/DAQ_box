@@ -286,7 +286,7 @@ void loop() {
           strcpy(fileDir, directory);
           strcat(fileDir, filename);
           Serial.println(fileDir);
-          File bajaData = SD.open(fileDir, FILE_WRITE); // Create file
+          File bajaData = SD.open(filename, FILE_WRITE); // Create file
           if (bajaData == 0) {
             Serial.println("File failed to write");
             // don't do anything more:
@@ -389,7 +389,7 @@ void loop() {
     // Set up SD Card reader
     File bajaData;
     if (USE_SD) {
-      bajaData = SD.open(fileDir, FILE_WRITE);
+      bajaData = SD.open(filename, FILE_WRITE);
     }
     // IMU Format
     // Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp
