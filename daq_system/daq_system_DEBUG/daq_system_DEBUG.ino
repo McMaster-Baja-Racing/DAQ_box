@@ -1,3 +1,4 @@
+
 /************************************************************************
   Author: DAQ Team
   Created on: 16/10/2020
@@ -18,131 +19,51 @@
 //Recording LED
 //If the battery is low LAST LED goes Red
 //more RPM sensors on inturrepts
+#include <C:\Users\Ariel\OneDrive\Documents\dev\DAQ_box\daq_system\daq_system_DEBUG\daq_system_DEBUG.h>
 
 
-
-#include <Wire.h>
-// For IMU
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BNO055.h>
-#include <utility/imumaths.h>
-// For GPS
-#include <Adafruit_GPS.h>
-// For display
-#include <Adafruit_NeoPixel.h>
-// For SD Card
-#include <SPI.h>
-#include <SD.h>
-//FOr Temp Sensors
-#include "Adafruit_MCP9808.h"
-
-// HUD
-#define LED_PIN    6      // Digital Pin 6 for LED's
-#define LED_COUNT  10     // 2 x 5 LED strip
-#define BRIGHTNESS 25     // Max brightness = 255
-#define LED_INTERVAL 100  // Period in msec for LED update (larger than 100 produces noticable lag)
-
-// BOX
-
-#define BATT_INTERVAL 400
-#define IMU_INTERVAL 10 // ms
-#define GPS_INTERVAL 100 // ms (Should be multiple of IMU_INTERVAL)
-#define TEMP_INTERVAL 400 // ms (Should be multiple of IMU_INTERVAL)
-#define HALL_THRESH 4
-#define POT A2
-#define VOLT_PIN  A3
-#define RELAY_PIN 4
-#define HALL_PIN 21
-
-#define RECORDLED_PIN 13
-
-#define PRIMARYTEMP_PIN A0
-#define SECONDARYTEMP_PIN A1
-
-
-
-/***  Start of Global variables  ***/
-/***********************************/
-#define GPSSerial Serial1
-Adafruit_GPS GPS(&GPSSerial);
-Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
-Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
-Adafruit_MCP9808 primaryTempSensor = Adafruit_MCP9808();
-Adafruit_MCP9808 secondaryTempSensor = Adafruit_MCP9808();
-
-
-unsigned long battTimer = millis();
-unsigned long tempTimer = millis();
-unsigned long ledTimer = millis();
-unsigned long imuTimer = millis();
-unsigned long start = micros();
-unsigned long end_time = micros();
-unsigned long past_time = micros();
-uint32_t gpsTimer = millis();
-
-bool use_gps = false;
-bool gps_flash = true;
-bool gps_timesend = false;
-bool gps_goodmessage = false;
-bool send_data = false;
-bool gps_active = false;
-float hall_count = 0;
-bool on_state = false;
-bool stopped = false;
-
-int rpm = 0;
-float spd = 2600;
-int spdTarget = 40;
-
-bool usePrimI2C = true;
-bool useSecI2C = true;
-
-
-float batVoltage = 0;
-int batPercent = 0;
-float primaryTemp = 0;
-float primaryTemp_basic = 0;
-float secondaryTemp = 0;
-float secondaryTemp_basic = 0;
-int8_t boardTemp = 0;
-int tempResolution = 0;
-// sets the resolution mode of reading, the modes are defined in the table bellow:
-// Mode Resolution SampleTime
-//  0    0.5°C       30 ms
-//  1    0.25°C      65 ms
-//  2    0.125°C     130 ms
-//  3    0.0625°C    250 ms
-
-const int chipSelect = 4;
-
-// File name MUST be 8 or less characters
-// https://www.arduino.cc/en/Reference/SDCardNotes
-char filename[] = "/00000000.CSV";
-char directory[] = "/00-00-00";
-char fileDir = "/00-00-00/00000000.CSV";
-
-bool USE_SD = true;
-
-#define USE_GPS_SPEED
-bool showRPM = false; //variable to choose whether the HUD shows RPM or SPEED, false for SPEED true for RPM.
-
-/***  End of Global variables  ***/
-/*********************************/
-
-// Declare function for setting pixel colours
+// Function Declarations
 void setColour(int8_t edge); // turns off LEDs from (start to LED_COUNT)
+void getFilename(uint8_t hour, uint8_t minute, uint8_t second);
+void getDirectory(uint8_t day, uint8_t month, uint8_t year);
+void incrementHall_FR();
+void incrementHall_SEC();
+void setColour(int8_t edge);
 
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second)
 {
   // Only hour, minute and second are saved in UTC time
   // Please move files before start of new day
-  sprintf(filename, "/%02d%02d%02d.CSV", hour, minute, second);
+  sprintf(filename, "/%02d%02d%02d.CSV", (hour-5)%24+1, minute, second);
 }
 
 void getDirectory(uint8_t day, uint8_t month, uint8_t year)
 {
   // Please move files before start of new day
   sprintf(directory, "/%02d-%02d-%02d", day, month, year);
+}
+void incrementHall_FR() {
+  Serial.println("Front");
+  FR_hall_count += 1;
+}
+void incrementHall_SEC() {
+  Serial.println("Rear");
+  SEC_hall_count += 1;
+}
+
+void setColour(int8_t edge)
+{
+  // Set all setColour to off/0
+  strip.clear();
+
+  const uint8_t R[10] = {255, 255, 255, 255, 255, 255, 100,   0,   0,  75};
+  const uint8_t G[10] = {  0,  80, 150, 200, 200, 235, 255, 255,   0,   0};
+  const uint8_t B[10] = {  0,   0,   0,   0,   0,   0,   0,   0, 255, 255};
+
+  //Set pixel colour up to strip[edge]
+  for (uint8_t i = 0; i <= edge; i++) {
+    strip.setPixelColor(i, strip.Color(R[i], G[i], B[i]));
+  }
 }
 void setup() {
   //Set up serial
@@ -160,11 +81,11 @@ void setup() {
 
   //Setup analog reference votlage
   analogReference(INTERNAL4V3);
-  attachInterrupt(digitalPinToInterrupt(HALL_PIN), incrementHall, FALLING);
-
-  pinMode(RELAY_PIN, OUTPUT);
+  attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, FALLING);
+  attachInterrupt(digitalPinToInterrupt(SEC_HALL_PIN), incrementHall_SEC, FALLING);
+  pinMode(SD_CS_PIN, OUTPUT);
   pinMode(RECORDLED_PIN, OUTPUT);
-  pinMode(HALL_PIN, INPUT_PULLUP);
+  
   delay(1000);
   digitalWrite(RECORDLED_PIN, HIGH);
   delay(2000);
@@ -179,17 +100,8 @@ void setup() {
   }
   strip.show();
   delay(500);
-  //Set up temp sensors with adress corespondeing to the table below
-  //  A2 A1 A0 address
-  //  0  0  0   0x18  this is the default address
-  //  0  0  1   0x19
-  //  0  1  0   0x1A
-  //  0  1  1   0x1B
-  //  1  0  0   0x1C
-  //  1  0  1   0x1D
-  //  1  1  0   0x1E
-  //  1  1  1   0x1F
-  if (!primaryTempSensor.begin(0x18)) {
+
+  if (!primaryTempSensor.begin(PrimaryTempAdress)) {
     Serial.println("Couldn't find primary MCP9808! Check your connections and verify the address is correct.");
     usePrimI2C = false;
     strip.setPixelColor(1, strip.Color(255, 0, 0));
@@ -199,7 +111,7 @@ void setup() {
   }
   strip.show();
   delay(500);
-  if (!secondaryTempSensor.begin(0x19)) {
+  if (!secondaryTempSensor.begin(SecondaryTempAdress)) {
     Serial.println("Couldn't find secondary MCP9808! Check your connections and verify the address is correct.");
     useSecI2C = false;
     strip.setPixelColor(2, strip.Color(255, 0, 0));
@@ -209,12 +121,6 @@ void setup() {
   }
   strip.show();
   delay(500);
-  // sets the resolution mode of reading, the modes are defined in the table bellow:
-  // Mode Resolution SampleTime
-  //  0    0.5°C       30 ms
-  //  1    0.25°C      65 ms
-  //  2    0.125°C     130 ms
-  //  3    0.0625°C    250 ms
   if (usePrimI2C) {
     primaryTempSensor.setResolution(2);
   }
@@ -223,7 +129,7 @@ void setup() {
   }
   if (USE_SD) {
     // SD Card Setup
-    if (!SD.begin(chipSelect)) {
+    if (!SD.begin(SD_CS_PIN)) {
       Serial.println("Card failed, or not present");
       strip.setPixelColor(3, strip.Color(255, 0, 0));
       strip.show();
@@ -233,7 +139,6 @@ void setup() {
     else {
       Serial.println("card initialized.");
       strip.setPixelColor(3, strip.Color(0, 255, 0));
-      SD.mkdir(directory);
     }
     strip.show();
     
@@ -254,7 +159,7 @@ void setup() {
   // turn on turn on only the "minimum recommended" data
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   // Set the update rate
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ); // 1 Hz update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ); // 1 Hz update rate
   Serial.println("Setup Finished");
   digitalWrite(RECORDLED_PIN, LOW);
   delay(1000);
@@ -262,39 +167,52 @@ void setup() {
 }
 
 void loop() {
-
-
+  Serial.println(STRAIN);
   //-------------Hall Effect Sensor--------------------
 
   // counting number of times the hall sensor is tripped
   // but without double counting during the same trip
 
-  if (hall_count > HALL_THRESH) {
-
+  if (FR_hall_count > HALL_THRESH) {
+  
     // print information about Time and spd
-    end_time = micros();
-    past_time = (end_time - start);
-    //    Serial.print("Time Passed: ");
-    //    Serial.print(time_passed);
-    //    Serial.println("s");
-    if (stopped) {
-      spd = 0;
-      stopped = false;
+    FR_end_time = micros();
+    FR_past_time = (FR_end_time - FR_start);
+    if (FR_stopped) {
+      FR_rpm = 0;
+      FR_stopped = false;
     }
     else {
-      spd = 0.0157774892888 * (1 / (past_time / 1000000.0)) * 60;
+      FR_rpm = FR_hall_count/((FR_past_time / 1000000.0)/60);
     }
-    //spd = map(analogRead(POT)*100, 0, 500, 1400, 4000);
-    //Serial.println(" ");
-    //Serial.print(spd);
-    //Serial.print(" spd");
-    hall_count = 0;
-    start = micros();
+    FR_hall_count = 0;
+    FR_start = micros();
   }
-  if (!stopped && (micros() - start >= 1000000)) {
-    spd  = 0;
-    stopped = true;
+  if (!FR_stopped && (micros() - FR_start >= 1000000)) {
+    FR_rpm  = 0;
+    FR_stopped = true;
   }
+  
+  if (SEC_hall_count > HALL_THRESH) {
+
+    // print information about Time and spd
+    SEC_end_time = micros();
+    SEC_past_time = (SEC_end_time - SEC_start);
+    if (SEC_stopped) {
+      SEC_rpm = 0;
+      SEC_stopped = false;
+    }
+    else {
+      SEC_rpm = SEC_hall_count/((SEC_past_time / 1000000.0)/60);
+    }
+    SEC_hall_count = 0;
+    SEC_start = micros();
+  }
+  if (!SEC_stopped && (micros() - SEC_start >= 1000000)) {
+    SEC_rpm  = 0;
+    SEC_stopped = true;
+  }
+
 
 
   //-------------Battery Check---------------
@@ -303,13 +221,6 @@ void loop() {
     batVoltage = analogRead(VOLT_PIN);
     batPercent = map(batVoltage, 660, 750, 0, 100);
     batVoltage = (((batVoltage / 1024) * 4.3) * (16)) / 6;
-
-    if (batVoltage >= 6.0) {
-      digitalWrite(RELAY_PIN, HIGH);
-    }
-    else {
-      digitalWrite(RELAY_PIN, LOW);
-    }
   }
 
 
@@ -317,7 +228,7 @@ void loop() {
   if (millis() - ledTimer > LED_INTERVAL) {
     ledTimer = millis();
     if (showRPM) {
-      int numLED = map(rpm, 1800, 3800, -1, 9);
+      int numLED = map(SEC_rpm, 1800, 3800, -1, 9);
       if (numLED > 9) {
         numLED = 9;
       }
@@ -325,7 +236,7 @@ void loop() {
     }
     if (!showRPM) {
       int numLED = 0;
-      numLED = map(spd, 0, spdTarget, -1, 9);
+      numLED = map(SEC_rpm, 0, 5000, -1, 9);
       if (numLED > 9) {
         numLED = 9;
       }
@@ -371,6 +282,7 @@ void loop() {
           getDirectory(GPS.day, GPS.month, GPS.year);
           SD.mkdir(directory);
           Serial.println(filename);
+          Serial.println(directory);
           strcpy(fileDir, directory);
           strcat(fileDir, filename);
           Serial.println(fileDir);
@@ -383,13 +295,14 @@ void loop() {
           }
           strip.setPixelColor(5, strip.Color(0, 255, 0));
           delay(500);
-          bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time,Primary Temp i2c, Secondary Temp i2c, Primary Temp Basic, Secondary Temp Basic, Speed (Km/h),Battery Percentage, Battery Voltage");
+          bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time, Primary Temp i2c, Secondary Temp i2c, Suspension Travel, Strain, FR_RPM, SEC_RPM,Battery Percentage, Battery Voltage");
           bajaData.close();
           gps_flash = true;
           for (int i = 0; i < LED_COUNT; i++) {
             strip.setPixelColor(i, strip.Color(0, 255, 0));
           }
-          digitalWrite(RECORDINGLED_PIN,HIGH);
+          Serial.println("Fix Found Recording Starting");
+          digitalWrite(RECORDLED_PIN,HIGH);
         }
         else {
           if (gps_flash = true) {
@@ -435,9 +348,6 @@ void loop() {
   // 3) Accelerometer: placed in 6 standing positions for +X, -X, +Y, -Y, +Z and -Z
   // We need raw values for the kalman filter though
 
-  imu::Vector<3> accel;
-  imu::Vector<3> gyro;
-  sensors_event_t event;
   if (millis() - imuTimer > (IMU_INTERVAL - 1)) {
     
     // Format
@@ -448,8 +358,9 @@ void loop() {
 
     imuTimer = millis(); // Get time
     bno.getEvent(&event);
-    accel = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
+    accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
     gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+    gravity= bno.getVector(Adafruit_BNO055::VECTOR_GRAVITY);
     boardTemp = bno.getTemp();
     send_data = true;
   }
@@ -468,8 +379,8 @@ void loop() {
 
 
 
-  //primaryTemp_basic=15+(analogRead(PRIMARYTEMP_PIN)/1024*4.3-3741/1024)/0.007390625;
-  //secondaryTemp_basic=15+(analogRead(SECONDARYTEMP_PIN)/1024*4.3-3741/1024)/0.007390625;
+  Sus_Travel=(analogRead(SUS_PIN));
+  STRAIN=(analogRead(STRAIN_PIN));
 
   //-----------------Send Data--------------------------------------
 
@@ -481,7 +392,7 @@ void loop() {
       bajaData = SD.open(fileDir, FILE_WRITE);
     }
     // IMU Format
-    // Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gyro X, Gyro Y, Gyro Z, IMU Temp
+    // Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp
     // Time
 
     dataString += String(imuTimer); // Time since in ms
@@ -495,6 +406,10 @@ void loop() {
     dataString += String(accel.x()); dataString += F(",");
     dataString += String(accel.y()); dataString += F(",");
     dataString += String(accel.z()); dataString += F(",");
+
+    dataString += String(gravity.x()); dataString += F(",");
+    dataString += String(gravity.y()); dataString += F(",");
+    dataString += String(gravity.z()); dataString += F(",");
 
     dataString += String(gyro.x()); dataString += F(",");
     dataString += String(gyro.y()); dataString += F(",");
@@ -511,7 +426,7 @@ void loop() {
     if (gps_timesend && gps_goodmessage && GPS.fix) {
 
 #ifdef USE_GPS_SPEED
-      spd = GPS.speed * 1.852;
+      //spd = GPS.speed * 1.852;
 #endif
 
       dataString += (int)GPS.fix; dataString += F(",");
@@ -531,18 +446,19 @@ void loop() {
 
 
 
-    //Primary Temp i2c, Secondary Temp i2c, Primary Temp Basic, Secondary Temp Basic, Speed (Km/h),Battery Percentage, Battery Voltage
+    //Primary Temp i2c, Secondary Temp i2c, Suspension Travel, Strain,FR_RPM, SEC_RPM,Battery Percentage, Battery Voltage
     dataString += String(primaryTemp); dataString += F(",");
     dataString += String(secondaryTemp); dataString += F(",");
-    dataString += String(primaryTemp_basic); dataString += F(",");
-    dataString += String(secondaryTemp_basic); dataString += F(",");
-    dataString += String(spd); dataString += F(",");
+    dataString += String(Sus_Travel); dataString += F(",");
+    dataString += String(STRAIN); dataString += F(",");
+    dataString += String(FR_rpm); dataString += F(",");
+    dataString += String(SEC_rpm); dataString += F(",");
     dataString += String(batPercent); dataString += F(",");
     dataString += String(batVoltage);
 
     if (USE_SD) {
       bajaData.println(dataString);
-      bajaData.close();
+      bajaData.flush();
     }
     else {
       Serial.println(dataString);
@@ -550,23 +466,4 @@ void loop() {
     send_data = false;
   }
   
-}
-
-void incrementHall() {
-  hall_count += 1;
-}
-
-void setColour(int8_t edge)
-{
-  // Set all setColour to off/0
-  strip.clear();
-
-  const uint8_t R[10] = {255, 255, 255, 255, 255, 255, 100,   0,   0,  75};
-  const uint8_t G[10] = {  0,  80, 150, 200, 200, 235, 255, 255,   0,   0};
-  const uint8_t B[10] = {  0,   0,   0,   0,   0,   0,   0,   0, 255, 255};
-
-  //Set pixel colour up to strip[edge]
-  for (uint8_t i = 0; i <= edge; i++) {
-    strip.setPixelColor(i, strip.Color(R[i], G[i], B[i]));
-  }
 }
