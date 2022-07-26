@@ -20,6 +20,7 @@
 //If the battery is low LAST LED goes Red
 //more RPM sensors on inturrepts
 #include <C:\Users\Ariel\OneDrive\Documents\dev\DAQ_box\daq_system\daq_system_DEBUG\daq_system_DEBUG.h>
+#include <C:\Users\Ariel\OneDrive\Documents\dev\DAQ_box\daq_system\daq_system_DEBUG\datastruct.h>
 
 
 // Function Declarations
@@ -29,6 +30,9 @@ void getDirectory(uint8_t day, uint8_t month, uint8_t year);
 void incrementHall_FR();
 void incrementHall_SEC();
 void setColour(int8_t edge);
+void sdSend();
+void buffPushFloat(int id, float tempData);
+void buffPushInt(int id, unsigned long tempData);
 
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second)
 {
@@ -65,6 +69,46 @@ void setColour(int8_t edge)
     strip.setPixelColor(i, strip.Color(R[i], G[i], B[i]));
   }
 }
+
+void sdSend(){
+  statusLED=!statusLED;
+  digitalWrite(STATUS_PIN,statusLED);
+  bajaData = SD.open(fileDir, FILE_WRITE); // Create file
+  dataStruct sdTemp;
+  while(!buff.isEmpty()){
+    buff.pop(sdTemp);
+    bajaData.write(sdTemp.timeStamp);
+    bajaData.write(sdTemp.id);
+    bajaData.write(sdTemp.typ);
+    if (sdTemp.typ==INT){
+       bajaData.write(sdTemp.data_long);
+    }
+    else if (sdTemp.typ==FLOAT){
+       bajaData.write(sdTemp.data_float);
+    }
+  }
+  bajaData.close();
+}
+
+void buffPushFloat(int id, float tempData){
+  temp.id=id;
+  temp.typ=FLOAT;
+  temp.data_float=tempData;
+  if (!buff.push(temp)){
+    sdSend();
+    buff.push(temp);
+  }
+}
+
+void buffPushInt(int id, int tempData){
+  temp.id=id;
+  temp.typ=INT;
+  temp.data_float=tempData;
+  if (!buff.push(temp)){
+    sdSend();
+    buff.push(temp);
+  }
+}
 void setup() {
   //Set up serial
   Serial.begin(115200);
@@ -80,14 +124,14 @@ void setup() {
 
 
   //Setup analog reference votlage
-  analogReference(INTERNAL4V3);
+  //analogReference(INTERNAL4V3);
   attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, FALLING);
   attachInterrupt(digitalPinToInterrupt(SEC_HALL_PIN), incrementHall_SEC, FALLING);
   pinMode(SD_CS_PIN, OUTPUT);
-  pinMode(RECORDLED_PIN, OUTPUT);
+  pinMode(STATUS_PIN, OUTPUT);
   
   delay(1000);
-  digitalWrite(RECORDLED_PIN, HIGH);
+  digitalWrite(STATUS_PIN, HIGH);
   delay(2000);
   // Set up imu
   if (!bno.begin()) {
@@ -147,7 +191,7 @@ void setup() {
 
 
   // Set up GPS
-  if (!GPS.begin(9600)) {
+  if (!GPS.begin(115200)) {
     strip.setPixelColor(4, strip.Color(255, 0, 0));
     Serial.println("GPS failed, or not present");
     use_gps = false;
@@ -161,13 +205,13 @@ void setup() {
   // Set the update rate
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ); // 1 Hz update rate
   Serial.println("Setup Finished");
-  digitalWrite(RECORDLED_PIN, LOW);
+  digitalWrite(STATUS_PIN, LOW);
   delay(1000);
 
 }
 
 void loop() {
-  Serial.println(STRAIN);
+  
   //-------------Hall Effect Sensor--------------------
 
   // counting number of times the hall sensor is tripped
@@ -183,7 +227,7 @@ void loop() {
       FR_stopped = false;
     }
     else {
-      FR_rpm = FR_hall_count/((FR_past_time / 1000000.0)/60);
+      buffPushFloat(RPM_FR,FR_hall_count/((FR_past_time / 1000000.0)/60));
     }
     FR_hall_count = 0;
     FR_start = micros();
@@ -203,7 +247,7 @@ void loop() {
       SEC_stopped = false;
     }
     else {
-      SEC_rpm = SEC_hall_count/((SEC_past_time / 1000000.0)/60);
+      buffPushFloat(RPM_SEC,SEC_hall_count/((SEC_past_time / 1000000.0)/60));
     }
     SEC_hall_count = 0;
     SEC_start = micros();
@@ -221,6 +265,9 @@ void loop() {
     batVoltage = analogRead(VOLT_PIN);
     batPercent = map(batVoltage, 660, 750, 0, 100);
     batVoltage = (((batVoltage / 1024) * 4.3) * (16)) / 6;
+    
+    buffPushInt(BATT_PERC,batPercent);
+    buffPushFloat(BATT_VOLT,batVoltage);   
   }
 
 
@@ -286,7 +333,7 @@ void loop() {
           strcpy(fileDir, directory);
           strcat(fileDir, filename);
           Serial.println(fileDir);
-          File bajaData = SD.open(filename, FILE_WRITE); // Create file
+          bajaData = SD.open(fileDir, FILE_WRITE); // Create file
           if (bajaData == 0) {
             Serial.println("File failed to write");
             // don't do anything more:
@@ -302,10 +349,11 @@ void loop() {
             strip.setPixelColor(i, strip.Color(0, 255, 0));
           }
           Serial.println("Fix Found Recording Starting");
-          digitalWrite(RECORDLED_PIN,HIGH);
+          digitalWrite(STATUS_PIN,HIGH);
+          statusLED=True;
         }
         else {
-          if (gps_flash = true) {
+          if (gps_flash == true) {
             strip.setPixelColor(9, strip.Color(0, 255, 0));
             gps_flash = false;
           }
@@ -320,7 +368,7 @@ void loop() {
 
     }
     else {
-      if (gps_flash = true) {
+      if (gps_flash == true) {
         for (int i = 0; i < LED_COUNT; i++) {
           strip.setPixelColor(i, strip.Color(255, 0, 0));
         }
@@ -361,8 +409,27 @@ void loop() {
     accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
     gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
     gravity= bno.getVector(Adafruit_BNO055::VECTOR_GRAVITY);
-    boardTemp = bno.getTemp();
-    send_data = true;
+
+
+
+    buffPushFloat(IMU_ABS_X,((float)event.orientation.x));
+    buffPushFloat(IMU_ABS_Y,((float)event.orientation.y));
+    buffPushFloat(IMU_ABS_Z,((float)event.orientation.z));
+
+    buffPushFloat(IMU_ACCEL_X,accel.x());
+    buffPushFloat(IMU_ACCEL_Y,accel.y());
+    buffPushFloat(IMU_ACCEL_Z,accel.z());
+
+    buffPushFloat(IMU_GRAVITY_X,gravity.x());
+    buffPushFloat(IMU_GRAVITY_Y,gravity.y());
+    buffPushFloat(IMU_GRAVITY_Z,gravity.z());
+
+    buffPushFloat(IMU_GYRO_X,gyro.x());
+    buffPushFloat(IMU_GYRO_Y,gyro.y());
+    buffPushFloat(IMU_GYRO_Z,gyro.z());
+
+    buffPushFloat(IMU_TEMP,bno.getTemp());
+       
   }
 
   //-----------------TEMP--------------------------------------
@@ -376,94 +443,35 @@ void loop() {
       secondaryTemp = secondaryTempSensor.readTempC();
     }
   }
+if (gps_timesend && gps_goodmessage && GPS.fix) {
+
+      buffPushFloat(GPS_LATITUDE,GPS.latitude);
+      buffPushInt(GPS_LAT,GPS.lat);
+
+      buffPushFloat(GPS_LONGITUTE,GPS.longitude);
+      buffPushInt(GPS_LON,GPS.lon);
+
+      buffPushFloat(GPS_ANGLE,GPS.angle);
+      buffPushFloat(GPS_SPEED,GPS.speed);
+
+      buffPushInt(GPS_DAYMONTHYEAR,GPS.day<<16 & GPS.month<<8 & GPS.year);
+      buffPushInt(GPS_SECONDMINUTEHOUR,GPS.seconds<<16 & GPS.minute<<8 & GPS.hour);
+}
 
 
+  //Suspension Travel write  
+  
+  buffPushInt(SUS_TRAV_FL,analogRead(SUS_PIN));
+  buffPushInt(STRAIN1,analogRead(STRAIN_PIN));
 
-  Sus_Travel=(analogRead(SUS_PIN));
-  STRAIN=(analogRead(STRAIN_PIN));
 
   //-----------------Send Data--------------------------------------
 
-  String dataString = "";
-  if (send_data && gps_active) {
-    // Set up SD Card reader
-    File bajaData;
-    if (USE_SD) {
-      bajaData = SD.open(filename, FILE_WRITE);
+  if (buff.size()>4 && millis()-sdTimer > (SD_INTERVAL-1)){
+    if (gps_active){
+      sdSend();
+      sdTimer=millis();
     }
-    // IMU Format
-    // Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp
-    // Time
-
-    dataString += String(imuTimer); // Time since in ms
-    dataString += F(",");
-
-    // Orientation
-    dataString += String((float)event.orientation.x); dataString += F(",");
-    dataString += String((float)event.orientation.y); dataString += F(",");
-    dataString += String((float)event.orientation.z); dataString += F(",");
-
-    dataString += String(accel.x()); dataString += F(",");
-    dataString += String(accel.y()); dataString += F(",");
-    dataString += String(accel.z()); dataString += F(",");
-
-    dataString += String(gravity.x()); dataString += F(",");
-    dataString += String(gravity.y()); dataString += F(",");
-    dataString += String(gravity.z()); dataString += F(",");
-
-    dataString += String(gyro.x()); dataString += F(",");
-    dataString += String(gyro.y()); dataString += F(",");
-    dataString += String(gyro.z()); dataString += F(",");
-    dataString += String(boardTemp); dataString += F(",");
-
-    // GPS Format
-    // Please read NMEA documentation to understand
-    // Note that Fix is true or false and GPS Quality Indicator works like this: 0 - fix not available, 1 - GPS fix, 2 - Differential GPS fix
-    // We get signals from GPGGA or GPRMC
-    // Many values have to be converted to be usable (most software wants DD, not DMM)
-    // GPS has its own timer, but due to the need of synchronous input, we have to accept some time inaccuracy and just use the imu timer
-    // HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time
-    if (gps_timesend && gps_goodmessage && GPS.fix) {
-
-#ifdef USE_GPS_SPEED
-      //spd = GPS.speed * 1.852;
-#endif
-
-      dataString += (int)GPS.fix; dataString += F(",");
-      dataString += String(GPS.latitude, 4); dataString += String(GPS.lat); dataString += F(",");
-      dataString += String(GPS.longitude, 4); dataString += String(GPS.lon); dataString += F(",");
-      dataString += String(GPS.angle); dataString += F(",");
-      dataString += String(GPS.speed); dataString += F(",");
-      dataString += String(GPS.day) + "-" + String(GPS.month) + "-" + String(GPS.year) + " " + String(GPS.hour) + "-" + String(GPS.minute) + "-" + String(GPS.seconds) + " " + String(GPS.milliseconds); dataString += F(",");
-      gps_timesend = false;
-    } else {
-      //Not GPS placeholder
-      dataString += (int)GPS.fix;
-      dataString += F(",");
-      dataString += "-1,-1,-1,-1,-1,";
-    }
-
-
-
-
-    //Primary Temp i2c, Secondary Temp i2c, Suspension Travel, Strain,FR_RPM, SEC_RPM,Battery Percentage, Battery Voltage
-    dataString += String(primaryTemp); dataString += F(",");
-    dataString += String(secondaryTemp); dataString += F(",");
-    dataString += String(Sus_Travel); dataString += F(",");
-    dataString += String(STRAIN); dataString += F(",");
-    dataString += String(FR_rpm); dataString += F(",");
-    dataString += String(SEC_rpm); dataString += F(",");
-    dataString += String(batPercent); dataString += F(",");
-    dataString += String(batVoltage);
-
-    if (USE_SD) {
-      bajaData.println(dataString);
-      bajaData.flush();
-    }
-    else {
-      Serial.println(dataString);
-    }
-    send_data = false;
   }
   
 }

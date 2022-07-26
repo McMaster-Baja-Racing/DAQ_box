@@ -1,0 +1,68 @@
+// Should likely be 32 bit aligned (if using FAT32 filesystem)
+#include <RingBuf.h>
+
+#define dataBufferSize 30
+
+
+typedef struct dataStruct_t
+{
+  unsigned long timeStamp; // 32 bits
+  unsigned int id;     // 16 bits
+  unsigned int typ;   // 16 bit
+    
+  union 
+  {
+    unsigned long data_long;
+    float data_float;
+    unsigned long printData;
+  };
+} dataStruct;
+
+enum DataType
+{
+  INT,
+  FLOAT,
+  IMU_ABS_X,
+  IMU_ABS_Y,
+  IMU_ABS_Z,
+  IMU_ACCEL_X,
+  IMU_ACCEL_Y,
+  IMU_ACCEL_Z,
+  IMU_GRAVITY_X,
+  IMU_GRAVITY_Z,
+  IMU_GRAVITY_Y,
+  IMU_GYRO_X,
+  IMU_GYRO_Y,
+  IMU_GYRO_Z,
+  IMU_TEMP,
+  GPS_LATITUDE,
+  GPS_LAT,
+  GPS_LONGITUTE,
+  GPS_LON,
+  GPS_ANGLE,
+  GPS_SPEED,
+  GPS_TIME,
+  GPS_DAYMONTHYEAR,
+  GPS_SECONDMINUTEHOUR,
+  PRIM_TEMP,
+  SEC_TEMP,
+  SUS_TRAV_FR,
+  SUS_TRAV_FL,
+  SUS_TRAV_RR,
+  SUS_TRAV_RL,
+  STRAIN1,
+  STRAIN2,
+  STRAIN3,
+  STRAIN4,
+  RPM_FR,
+  RPM_FL,
+  RPM_SEC,
+  RPM_PRIM,
+  BATT_PERC,
+  BATT_VOLT,
+  DATATYPE_COUNT
+};
+
+RingBuf<dataStruct ,dataBufferSize> buff;
+int dataPosition = 0;
+dataStruct temp;

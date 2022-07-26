@@ -29,6 +29,7 @@
 #define GPS_INTERVAL 200 // ms (Should be multiple of IMU_INTERVAL)
 #define TEMP_INTERVAL 400 // ms (Should be multiple of IMU_INTERVAL)
 #define LED_INTERVAL 100  // Period in msec for LED update (larger than 100 produces noticable lag)
+#define SD_INTERVAL 1000
 
 // RPM Sensors
 #define HALL_THRESH 4
@@ -37,8 +38,8 @@
 #define VOLT_PIN  A3
 #define FR_HALL_PIN 5
 #define SEC_HALL_PIN 7
-#define RECORDLED_PIN 13
-#define LED_PIN    6      // Digital Pin 6 for HUD LED's
+#define STATUS_PIN 13
+#define HUD_PIN    6      // Digital Pin 6 for HUD LED's
 #define SUS_PIN A1
 #define STRAIN_PIN A2
 #define SD_CS_PIN 4
@@ -65,7 +66,7 @@
 
 //Object Definitions
 Adafruit_GPS GPS(&GPSSerial);
-Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip(LED_COUNT, HUD_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 Adafruit_MCP9808 primaryTempSensor = Adafruit_MCP9808();
 Adafruit_MCP9808 secondaryTempSensor = Adafruit_MCP9808();
@@ -75,6 +76,8 @@ unsigned long battTimer = millis();
 unsigned long tempTimer = millis();
 unsigned long ledTimer = millis();
 unsigned long imuTimer = millis();
+unsigned long sdTimer = millis();
+
 
 uint32_t gpsTimer = millis();
 
@@ -87,6 +90,7 @@ bool gps_active = false;
 
 //SD CARD
 bool send_data = false;
+File bajaData;
 
 //RPM&SPEED
 unsigned long FR_start = micros();
@@ -106,6 +110,7 @@ int SEC_rpm = 0;
 int Sus_Travel=0;
 int STRAIN=0;
 
+bool statusLED=0;
 
 //Temperature Settings
 bool usePrimI2C = true;
