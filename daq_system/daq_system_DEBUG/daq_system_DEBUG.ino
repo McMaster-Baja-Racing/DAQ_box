@@ -31,14 +31,14 @@ void incrementHall_FR();
 void incrementHall_SEC();
 void setColour(int8_t edge);
 void sdSend();
-void buffPushFloat(int id, float tempData);
-void buffPushInt(int id, unsigned long tempData);
+void buffPush(int id, float tempData);
+void buffPush(int id, unsigned long tempData);
 
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second)
 {
   // Only hour, minute and second are saved in UTC time
   // Please move files before start of new day
-  sprintf(filename, "/%02d%02d%02d.CSV", (hour-5)%24+1, minute, second);
+  sprintf(filename, "/%02d%02d%02d.bin", (hour-5)%24+1, minute, second);
 }
 
 void getDirectory(uint8_t day, uint8_t month, uint8_t year)
@@ -47,11 +47,10 @@ void getDirectory(uint8_t day, uint8_t month, uint8_t year)
   sprintf(directory, "/%02d-%02d-%02d", day, month, year);
 }
 void incrementHall_FR() {
-  Serial.println("Front");
   FR_hall_count += 1;
 }
 void incrementHall_SEC() {
-  Serial.println("Rear");
+
   SEC_hall_count += 1;
 }
 
@@ -71,26 +70,37 @@ void setColour(int8_t edge)
 }
 
 void sdSend(){
-  statusLED=!statusLED;
-  digitalWrite(STATUS_PIN,statusLED);
-  bajaData = SD.open(fileDir, FILE_WRITE); // Create file
-  dataStruct sdTemp;
-  while(!buff.isEmpty()){
-    buff.pop(sdTemp);
-    bajaData.write(sdTemp.timeStamp);
-    bajaData.write(sdTemp.id);
-    bajaData.write(sdTemp.typ);
-    if (sdTemp.typ==INT){
-       bajaData.write(sdTemp.data_long);
+  if(gps_active){
+    Serial.print("Writing to SD name: ");
+    Serial.println(fileDir);
+    statusLED=!statusLED;
+    digitalWrite(STATUS_PIN,statusLED);
+    
+    dataStruct sdTemp;
+    while(!buff.isEmpty()){
+      buff.pop(sdTemp);
+      
+      bajaData.write((uint8_t *)&sdTemp,sizeof(sdTemp));
+      Serial.print("Timestamp: ");
+      Serial.print(sdTemp.timeStamp);
+      Serial.print(", ID: ");
+      Serial.print(sdTemp.id);
+      Serial.print(", TYP: ");
+       Serial.print(sdTemp.typ);
+       Serial.print(", Data: ");
+       if (sdTemp.typ==0){
+      Serial.println(sdTemp.data_long);
+       }
+       if (sdTemp.typ==1){
+      Serial.println(sdTemp.data_float);
+       }
     }
-    else if (sdTemp.typ==FLOAT){
-       bajaData.write(sdTemp.data_float);
-    }
+    bajaData.close();
   }
-  bajaData.close();
 }
 
-void buffPushFloat(int id, float tempData){
+void buffPush(int id, float tempData){
+  temp.timeStamp=millis();
   temp.id=id;
   temp.typ=FLOAT;
   temp.data_float=tempData;
@@ -100,10 +110,11 @@ void buffPushFloat(int id, float tempData){
   }
 }
 
-void buffPushInt(int id, int tempData){
+void buffPush(int id, unsigned long tempData){
+  temp.timeStamp=millis();
   temp.id=id;
   temp.typ=INT;
-  temp.data_float=tempData;
+  temp.data_long=tempData;
   if (!buff.push(temp)){
     sdSend();
     buff.push(temp);
@@ -191,7 +202,7 @@ void setup() {
 
 
   // Set up GPS
-  if (!GPS.begin(115200)) {
+  if (!GPS.begin(9600)) {
     strip.setPixelColor(4, strip.Color(255, 0, 0));
     Serial.println("GPS failed, or not present");
     use_gps = false;
@@ -203,7 +214,7 @@ void setup() {
   // turn on turn on only the "minimum recommended" data
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   // Set the update rate
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ); // 1 Hz update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
   Serial.println("Setup Finished");
   digitalWrite(STATUS_PIN, LOW);
   delay(1000);
@@ -211,12 +222,11 @@ void setup() {
 }
 
 void loop() {
-  
   //-------------Hall Effect Sensor--------------------
 
   // counting number of times the hall sensor is tripped
   // but without double counting during the same trip
-
+  //5Serial.println(SEC_hall_count);
   if (FR_hall_count > HALL_THRESH) {
   
     // print information about Time and spd
@@ -227,7 +237,7 @@ void loop() {
       FR_stopped = false;
     }
     else {
-      buffPushFloat(RPM_FR,FR_hall_count/((FR_past_time / 1000000.0)/60));
+      buffPush(RPM_FR,float(FR_hall_count/((FR_past_time / 1000000.0)/60)));
     }
     FR_hall_count = 0;
     FR_start = micros();
@@ -247,7 +257,7 @@ void loop() {
       SEC_stopped = false;
     }
     else {
-      buffPushFloat(RPM_SEC,SEC_hall_count/((SEC_past_time / 1000000.0)/60));
+      buffPush(RPM_SEC,float(SEC_hall_count/((SEC_past_time / 1000000.0)/60)));
     }
     SEC_hall_count = 0;
     SEC_start = micros();
@@ -264,10 +274,12 @@ void loop() {
     battTimer = millis();
     batVoltage = analogRead(VOLT_PIN);
     batPercent = map(batVoltage, 660, 750, 0, 100);
+    Serial.print("Battery Percentage= ");
+    Serial.println(batPercent);
     batVoltage = (((batVoltage / 1024) * 4.3) * (16)) / 6;
     
-    buffPushInt(BATT_PERC,batPercent);
-    buffPushFloat(BATT_VOLT,batVoltage);   
+    buffPush(BATT_PERC,(unsigned long) (batPercent));
+    buffPush(BATT_VOLT,batVoltage);   
   }
 
 
@@ -342,7 +354,7 @@ void loop() {
           }
           strip.setPixelColor(5, strip.Color(0, 255, 0));
           delay(500);
-          bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time, Primary Temp i2c, Secondary Temp i2c, Suspension Travel, Strain, FR_RPM, SEC_RPM,Battery Percentage, Battery Voltage");
+          //bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time, Primary Temp i2c, Secondary Temp i2c, Suspension Travel, Strain, FR_RPM, SEC_RPM,Battery Percentage, Battery Voltage");
           bajaData.close();
           gps_flash = true;
           for (int i = 0; i < LED_COUNT; i++) {
@@ -350,7 +362,7 @@ void loop() {
           }
           Serial.println("Fix Found Recording Starting");
           digitalWrite(STATUS_PIN,HIGH);
-          statusLED=True;
+          statusLED=true;
         }
         else {
           if (gps_flash == true) {
@@ -412,23 +424,23 @@ void loop() {
 
 
 
-    buffPushFloat(IMU_ABS_X,((float)event.orientation.x));
-    buffPushFloat(IMU_ABS_Y,((float)event.orientation.y));
-    buffPushFloat(IMU_ABS_Z,((float)event.orientation.z));
+    buffPush(IMU_ABS_X,((float)event.orientation.x));
+    buffPush(IMU_ABS_Y,((float)event.orientation.y));
+    buffPush(IMU_ABS_Z,((float)event.orientation.z));
 
-    buffPushFloat(IMU_ACCEL_X,accel.x());
-    buffPushFloat(IMU_ACCEL_Y,accel.y());
-    buffPushFloat(IMU_ACCEL_Z,accel.z());
+    buffPush(IMU_ACCEL_X,float(accel.x()));
+    buffPush(IMU_ACCEL_Y,float(accel.y()));
+    buffPush(IMU_ACCEL_Z,float(accel.z()));
 
-    buffPushFloat(IMU_GRAVITY_X,gravity.x());
-    buffPushFloat(IMU_GRAVITY_Y,gravity.y());
-    buffPushFloat(IMU_GRAVITY_Z,gravity.z());
+    buffPush(IMU_GRAVITY_X,float(gravity.x()));
+    buffPush(IMU_GRAVITY_Y,float(gravity.y()));
+    buffPush(IMU_GRAVITY_Z,float(gravity.z()));
 
-    buffPushFloat(IMU_GYRO_X,gyro.x());
-    buffPushFloat(IMU_GYRO_Y,gyro.y());
-    buffPushFloat(IMU_GYRO_Z,gyro.z());
+    buffPush(IMU_GYRO_X,float(gyro.x()));
+    buffPush(IMU_GYRO_Y,float(gyro.y()));
+    buffPush(IMU_GYRO_Z,float(gyro.z()));
 
-    buffPushFloat(IMU_TEMP,bno.getTemp());
+    buffPush(IMU_TEMP,(unsigned long)bno.getTemp());
        
   }
 
@@ -445,24 +457,24 @@ void loop() {
   }
 if (gps_timesend && gps_goodmessage && GPS.fix) {
 
-      buffPushFloat(GPS_LATITUDE,GPS.latitude);
-      buffPushInt(GPS_LAT,GPS.lat);
+      buffPush(GPS_LATITUDE,GPS.latitude);
+      buffPush(GPS_LAT,(unsigned long)GPS.lat);
 
-      buffPushFloat(GPS_LONGITUTE,GPS.longitude);
-      buffPushInt(GPS_LON,GPS.lon);
+      buffPush(GPS_LONGITUTE,GPS.longitude); 
+      buffPush(GPS_LON,(unsigned long)GPS.lon);
 
-      buffPushFloat(GPS_ANGLE,GPS.angle);
-      buffPushFloat(GPS_SPEED,GPS.speed);
+      buffPush(GPS_ANGLE,GPS.angle);
+      buffPush(GPS_SPEED,GPS.speed);
 
-      buffPushInt(GPS_DAYMONTHYEAR,GPS.day<<16 & GPS.month<<8 & GPS.year);
-      buffPushInt(GPS_SECONDMINUTEHOUR,GPS.seconds<<16 & GPS.minute<<8 & GPS.hour);
+      buffPush(GPS_DAYMONTHYEAR,(unsigned long)GPS.day<<16 & GPS.month<<8 & GPS.year);
+      buffPush(GPS_SECONDMINUTEHOUR,(unsigned long)GPS.seconds<<16 & GPS.minute<<8 & GPS.hour);
 }
 
 
   //Suspension Travel write  
   
-  buffPushInt(SUS_TRAV_FL,analogRead(SUS_PIN));
-  buffPushInt(STRAIN1,analogRead(STRAIN_PIN));
+  buffPush(SUS_TRAV_FL,(unsigned long)analogRead(SUS_PIN));
+  buffPush(STRAIN1,(unsigned long)analogRead(STRAIN_PIN));
 
 
   //-----------------Send Data--------------------------------------
