@@ -1,7 +1,7 @@
 
 #include "RingBuff.h"
 
-const int dataBufferSize=2048;
+const int dataBufferSize=1024*10;
 
 typedef struct dataStruct_t
 {
@@ -57,6 +57,7 @@ enum DataType
   RPM_PRIM,
   BATT_PERC,
   BATT_VOLT,
+  BRAKE_PRESS,
   DATATYPE_COUNT
 };
 
@@ -101,6 +102,7 @@ String DataTypeNames[]={
   "RPM_PRIM",
   "BATT_PERC",
   "BATT_VOLT",
+  "BRAKE_PRESS",
   "DATATYPE_COUNT"
 };
 

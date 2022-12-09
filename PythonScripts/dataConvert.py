@@ -1,9 +1,17 @@
 
 from os import times
-import struct
+import os
+import time
 
-file = open(r"C:\Users\Ariel\OneDrive\Documents\dev\DAQ_box\PythonScripts\test3.BIN", "rb")
-DataType=["F_IMU_ABS_X",
+start_time=time.time()
+
+import struct
+filename=r"C:\Docs\DAQ\Sept-25-2022-Test.bin"
+file = open(filename, "rb")
+size=os.path.getsize(filename)
+current=0
+DataType=[
+    "F_IMU_ABS_X",
   "F_IMU_ABS_Y",
   "F_IMU_ABS_Z",
   "F_IMU_ACCEL_X",
@@ -43,39 +51,96 @@ DataType=["F_IMU_ABS_X",
   "F_RPM_PRIM",
   "INT_BATT_PERC",
   "INT_BATT_VOLT",
+  "F_BRAKE_PRESS"
   "DATATYPE_COUNT"
 ]
 
+
+
 import csv
+files=[]
+queue=[""]
+def write_csv(data, id):
+    files[id].write(data)
 
-def write_csv(data, filename):
-    with open(str("PythonScripts/data/"+filename+'.csv'), 'a',newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(data)
 
-for type in DataType:
-    with open(str("PythonScripts/data/"+type+'.csv'), 'a', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(["Timestamp (ms)",type])
+for i in range(0, len(DataType)):
+    queue.append([""])
+# Print iterations progress
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+    # Print New Line on Complete
+    if iteration == total: 
+        print()
 
+for i in range(len(DataType)) :
+    f=open(str(r"C:\Docs\DAQ/data/"+DataType[i]+'.csv'), 'w', newline='')
+    files.append(f)
+    writer = csv.writer(f)
+    writer.writerow(["Timestamp (ms)",DataType[i]])
+counter=0
+counter2=0
+data_whole=file.read()
+addition=""
+current=0
 while (True):
-    data = file.read(8)
+    data = data_whole[current:current+8]
+    current+=8
     if (data==b''):
         break
     timestamp=int.from_bytes(data[0:4], byteorder='little')
     id=timestamp&0x3F
     timestamp=timestamp>>6
-    print(timestamp)
-    print(DataType[id])
-    if (DataType[id].index("_")==0):
-        print("ERROR")
-        break
-    elif (DataType[id].index("_")==1):
-        typ="f"
-        value=struct.unpack('f', data[4:8])[0]
-    elif (DataType[id].index("_")==3):
-        typ="i"
-        value=int.from_bytes(data[4:8], byteorder='little')
+    try:
+        if (DataType[id].index("_")==1):
+            typ="f"
+            value=struct.unpack('f', data[4:8])[0]
+        elif (DataType[id].index("_")==3):
+            typ="i"
+            value=int.from_bytes(data[4:8], byteorder='little')
+        if ("GPS" not in DataType[id]):
+            sav=time.time()
+            tot=0
+            st=str(str(timestamp)+","+str(value)+"\n")
 
-    write_csv([timestamp,value], DataType[id])
-    print(timestamp,id,typ,value)
+            queue[id][0]+=st
+            counter2+=1
+            if counter2>10000:
+                for i in queue:
+                    if (i):
+                        write_csv(i[0], queue.index(i))
+                    #print(i)
+                queue=[""]
+                for i in range(0, len(DataType)):
+                    queue.append([""])
+                tot=time.time()-sav
+                counter2=0
+            if tot!=0:
+                print(tot)
+        else:
+            addition=" errir"
+    except Exception as e:
+        print(e)
+        print("Error")
+        print("ID: "+str(id))
+        print("Timestamp: "+str(timestamp))
+    printProgressBar(current, size, prefix = (addition+' Time taken so far (s): ' +"{:.2f}".format(time.time()-start_time)+', Progress:'))
+    addition=""
+for file in files:
+    file.close()
+print("Time taken (s): "+str(time.time()-start_time))

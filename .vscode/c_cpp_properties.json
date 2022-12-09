@@ -16,17 +16,17 @@
             ],
             "intelliSenseMode": "gcc-x64",
             "includePath": [
-                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.5\\cores\\arduino",
-                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.5\\variants\\standard",
-                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.5\\libraries\\Wire\\src",
+                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\cores\\arduino",
+                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\variants\\standard",
+                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\Wire\\src",
                 "C:\\Users\\Ariel\\OneDrive\\Documents\\Arduino\\libraries\\Adafruit_Unified_Sensor",
                 "C:\\Users\\Ariel\\OneDrive\\Documents\\Arduino\\libraries\\Adafruit_BNO055",
                 "C:\\Users\\Ariel\\OneDrive\\Documents\\Arduino\\libraries\\Adafruit_BusIO",
                 "C:\\Users\\Ariel\\OneDrive\\Documents\\Arduino\\libraries\\Adafruit_GPS_Library\\src",
-                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.5\\libraries\\SoftwareSerial\\src",
-                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.5\\libraries\\SPI\\src",
+                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\SoftwareSerial\\src",
+                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\SPI\\src",
                 "C:\\Users\\Ariel\\OneDrive\\Documents\\Arduino\\libraries\\Adafruit_NeoPixel",
-                "C:\\Users\\Ariel\\OneDrive\\Documents\\Arduino\\libraries\\SD\\src",
+                "C:\\Program Files (x86)\\Arduino\\libraries\\SD\\src",
                 "C:\\Users\\Ariel\\OneDrive\\Documents\\Arduino\\libraries\\Adafruit_MCP9808_Library",
                 "C:\\Users\\Ariel\\OneDrive\\Documents\\Arduino\\libraries\\RingBuffer\\src",
                 "c:\\users\\ariel\\appdata\\local\\arduino15\\packages\\arduino\\tools\\avr-gcc\\7.3.0-atmel3.6.1-arduino7\\lib\\gcc\\avr\\7.3.0\\include",
@@ -34,7 +34,7 @@
                 "c:\\users\\ariel\\appdata\\local\\arduino15\\packages\\arduino\\tools\\avr-gcc\\7.3.0-atmel3.6.1-arduino7\\avr\\include"
             ],
             "forcedInclude": [
-                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.5\\cores\\arduino\\Arduino.h"
+                "C:\\Users\\Ariel\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\cores\\arduino\\Arduino.h"
             ],
             "cStandard": "c11",
             "cppStandard": "c++11",
