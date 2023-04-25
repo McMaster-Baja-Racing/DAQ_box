@@ -6,7 +6,7 @@ import time
 start_time=time.time()
 
 import struct
-filename=r"C:\Docs\DAQ\Sept-25-2022-Test.bin"
+filename=r"D:\00-00-00\00000000.bin"
 file = open(filename, "rb")
 size=os.path.getsize(filename)
 current=0
@@ -89,7 +89,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
         print()
 
 for i in range(len(DataType)) :
-    f=open(str(r"C:\Docs\DAQ/data/"+DataType[i]+'.csv'), 'w', newline='')
+    f=open(str(r"C:\Users\Ariel\OneDrive\Documents\dev\DAQ_box\PythonScripts\data/"+DataType[i]+'.csv'), 'w', newline='')
     files.append(f)
     writer = csv.writer(f)
     writer.writerow(["Timestamp (ms)",DataType[i]])

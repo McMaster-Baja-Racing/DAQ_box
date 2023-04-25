@@ -1,12 +1,11 @@
 
 
-
 #include "daq_system_Teensy4.h"
 #include "datastruct.h"
 
 
 // Function Declarations
-void setColour(int8_t edge); // turns off LEDs from (start to LED_COUNT)
+void setColour(int8_t edge); // turns off LEDs from (start to edge)
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second);
 void getDirectory(uint8_t day, uint8_t month, uint8_t year);
 void incrementHall_FR();
@@ -20,12 +19,40 @@ void buffPush(int id, unsigned long tempData);
 void strainData();
 void imuData();
 void susData();
+void dateTime();
+
+void dateTime(uint16_t* date, uint16_t* time) {
+  
+  uint16_t year;
+  uint8_t month, day, hour, minute, second;
+  // User gets date and time from GPS or real-time clock here
+  if (GPS.fix) {
+    year=GPS_year;
+    month=GPS_month;
+    day=GPS_day;
+    hour=(GPS_hour-4)%24;
+    minute=GPS_minute;
+    second=GPS_seconds;
+  }
+  else{
+    year=2030;
+    month=3;
+    day=1;
+    hour=13;
+    minute=2;
+    second=50;
+  }
+  // return date using FAT_DATE macro to format fields
+  *date = FAT_DATE(year, month, day);
+  // return time using FAT_TIME macro to format fields
+  *time = FAT_TIME(hour, minute, second);
+}
 
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second)
 {
   // Only hour, minute and second are saved in UTC time
   // Please move files before start of new day
-  sprintf(filename, "/%02d%02d%02d.bin", (hour-5)%24, minute, second);
+  sprintf(filename, "/%02d%02d%02d.bin", (24+(hour-5))%24, minute, second);
 }
 
 void getDirectory(uint8_t day, uint8_t month, uint8_t year)
@@ -64,6 +91,7 @@ void setColour(int8_t edge)
   for (uint8_t i = 0; i <= edge; i++) {
     strip.setPixelColor(i, strip.Color(R[i], G[i], B[i]));
   }
+  strip.setPixelColor(9, strip.Color(butColour[HUD_SHOW][0],butColour[HUD_SHOW][1],butColour[HUD_SHOW][2]));  
 }
 
 void sdSend(){
@@ -145,23 +173,17 @@ void buffPush(int id, unsigned long tempData){
   }
 }
 
-//camber link 4078.4x-7009.2
-//tie rod 5288.2x-7728.7
-
-//buffPush(STRAIN1,(float)(((analogRead(strainPin[0])/1024.0)*3.3)*4078.4-7279.2));
-//buffPush(STRAIN2,(float)(-6328.7+5288.2*(3.3*(analogRead(strainPin[1]))/1024.0)));
-
 void strainData1(){
-  buffPush(STRAIN1,(unsigned long)(analogRead(strainPin[0])));
+  strain=analogRead(strainPin[0]);
+  buffPush(STRAIN6,(unsigned long)(strain));
   buffPush(STRAIN2,(unsigned long)(analogRead(strainPin[1])));
-}
-void strainData2(){
-  sdSend();
 }
 
 void susData(){
-  buffPush(SUS_TRAV_RR,(unsigned long)(analogRead(susPin[3])));
-  buffPush(SUS_TRAV_FL,(unsigned long)(analogRead(susPin[2])));
+  sus1=analogRead(susPin[0]);
+  sus2=analogRead(susPin[1]);
+  buffPush(SUS_TRAV_FR,(unsigned long)(sus1));
+  buffPush(SUS_TRAV_FL,(unsigned long)(sus2));
 }
 
 void imuData(){
@@ -169,7 +191,7 @@ void imuData(){
     uint8_t system_cal, gyro_cal, accel_cal, mag_cal;
     system_cal = gyro_cal = accel_cal = mag_cal = 0;
     bno.getCalibration(&system_cal, &gyro_cal, &accel_cal, &mag_cal);
-    
+
     accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
     gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
     gravity= bno.getVector(Adafruit_BNO055::VECTOR_GRAVITY);
@@ -182,6 +204,7 @@ void imuData(){
       buffPush(IMU_TEMP,(unsigned long)bno.getTemp());
     }
     if (accel_cal>0){
+      
       buffPush(IMU_ACCEL_X,float(accel.x()));
       buffPush(IMU_ACCEL_Y,float(accel.y()));
       buffPush(IMU_ACCEL_Z,float(accel.z()));
@@ -224,16 +247,16 @@ void setup() {
   pinMode(STATUS_PIN, OUTPUT);
   
   delay(1000);
-  digitalWrite(STATUS_PIN, HIGH);
   delay(2000);
   // Set up imu
   if (!bno.begin()) {
     // There was a problem detecting the BNO055 ... check your connections
-    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    Serial.println("BNO FAILURE");
     strip.setPixelColor(0, strip.Color(255, 0, 0));
   }
   else {
     strip.setPixelColor(0, strip.Color(0, 255, 0));
+    Serial.println("BNO SUCCESS");
   }
   strip.show();
   delay(500);
@@ -248,7 +271,8 @@ void setup() {
       USE_SD = false;
     }
     else {
-      Serial.println("card initialized.");
+      SdFile::dateTimeCallback  (dateTime);
+      Serial.println("CARD SUCCESS");
       strip.setPixelColor(1, strip.Color(0, 255, 0));
     }
     strip.show();
@@ -265,6 +289,7 @@ void setup() {
   }
   else {
     strip.setPixelColor(2, strip.Color(0, 255, 0));
+    Serial.println("GPS SUCCESS");
   }
   strip.show();
   // turn on turn on only the "minimum recommended" data
@@ -280,7 +305,7 @@ void setup() {
 }
 
 void loop() {
-  //Serial.println("ah");
+
   inputButton.update();
   if(inputButton.fallingEdge()){
     Serial.print("Button Pressed: ");
@@ -328,7 +353,7 @@ void loop() {
     if (SEC_stopped) {
       SEC_stopped = false;
     }
-    SEC_rpm=(SEC_hall_count/((SEC_past_time / 1000000.0)/60));
+    SEC_rpm=(SEC_hall_count/((SEC_past_time / 1000000.0)/60))/SEC_counts_per_rotation;
     SEC_hall_count = 0;
     SEC_start = micros();
   }
@@ -344,7 +369,7 @@ void loop() {
     if (PRIM_stopped) {
       PRIM_stopped = false;
     }
-    PRIM_rpm=(PRIM_hall_count/((PRIM_past_time / 1000000.0)/60));
+    PRIM_rpm=(PRIM_hall_count/((PRIM_past_time / 1000000.0)/60))/Prim_counts_per_rotation;
     PRIM_hall_count = 0;
     PRIM_start = micros();
   }
@@ -376,44 +401,69 @@ void loop() {
   if (EN_HUD && millis() - ledTimer > LED_INTERVAL) {
     ledTimer = millis();
     if (gps_active){
+      
       if (HUD_SHOW == PRIM) {
-        int numLED = map(PRIM_rpm, 1800, 3400, -1, 9);
-        if (numLED > 9) {
-          numLED = 9;
+        int numLED = map(PRIM_rpm, 1700, 3600, -1, 8);
+        if (numLED > 8) {
+          numLED = 8;
         }
         setColour(numLED);
       }
       if (HUD_SHOW == SEC) {
         int numLED = 0;
-        numLED = map(SEC_rpm, 0, 5000, -1, 9);
-        if (numLED > 9) {
-          numLED = 9;
+        numLED = map(SEC_rpm, 0, 5000, -1, 8);
+        if (numLED > 8) {
+          numLED = 8;
         }
         setColour(numLED);
       }
       if (HUD_SHOW == BRAKE) {
         int numLED = 0;
-        numLED = map(brake_pres, 0, 3000, -1, 9);
-        if (numLED > 9) {
-          numLED = 9;
+        numLED = map(brake_pres, 0, 2000, -1, 8);
+        if (numLED > 8) {
+          numLED = 8;
         }
         setColour(numLED);
       }
       if (HUD_SHOW == GPS_S) {
         int numLED = 0;
-        numLED = map(gps_speed, 5, 40, -1, 9);
-        if (numLED > 9) {
-          numLED = 9;
+        numLED = map(gps_speed, 5, 45, -1, 8);
+        if (numLED > 8) {
+          numLED = 8;
         }
         setColour(numLED);
       }
       if (HUD_SHOW == BATT_PERCENT) {
         int numLED = 0;
-        numLED = map(batPercent, 0, 100, -1, 9);
-        if (numLED > 9) {
-          numLED = 9;
+        numLED = map(batPercent, 0, 100, -1, 8);
+        if (numLED > 8) {
+          numLED = 8;
         }
         setColour(numLED);
+      }
+      if(HUD_SHOW== STRAIN){
+        int numLED = 0;
+        numLED = map(strain, 0, 1095, -1, 8);
+        if (numLED > 8) {
+          numLED = 8;
+        }
+        setColour(numLED);        
+      }
+      if(HUD_SHOW== SUS1){
+        int numLED = 0;
+        numLED = map(sus1, 140, 310, -1, 8);
+        if (numLED > 8) {
+          numLED = 8;
+        }
+        setColour(numLED);        
+      }
+      if(HUD_SHOW== SUS2){
+        int numLED = 0;
+        numLED = map(sus2, 50, 312, -1, 8);
+        if (numLED > 8) {
+          numLED = 8;
+        }
+        setColour(numLED);        
       }
     }
     strip.show();   // Send the updated pixel colors to the hardware.
@@ -438,6 +488,13 @@ void loop() {
     if (GPS.fix) {
       if (USE_SD) {
         if (gps_active == false) {
+          GPS_year=GPS.year;
+          GPS_year=GPS.year;
+          GPS_month=GPS.month;
+          GPS_day=GPS.day;
+          GPS_hour=GPS.hour;
+          GPS_minute=GPS.minute;
+          GPS_seconds=GPS.seconds;
           getFilename(GPS.hour, GPS.minute, GPS.seconds);
           getDirectory(GPS.day, GPS.month, GPS.year);
           SD.mkdir(directory);
@@ -462,17 +519,6 @@ void loop() {
           delay(1000);
           statusLED=true;
         }
-        else {
-          if (gps_flash == true) {
-            strip.setPixelColor(9, strip.Color(255*(HUD_SHOW==PRIM)+127*(HUD_SHOW==GPS_S), 255*(HUD_SHOW==SEC)+127*(HUD_SHOW==GPS_S), 255*(HUD_SHOW==BRAKE)+127*(HUD_SHOW==GPS_S)));
-            gps_flash = false;
-          }
-          else {
-            strip.setPixelColor(9, strip.Color(0, 0, 0));
-            gps_flash = true;
-          }
-          strip.show();
-        }
       }
       gps_active = true;
 
@@ -493,17 +539,6 @@ void loop() {
       
       strip.show();
     }
-    else {
-          if (gps_flash == true) {
-            strip.setPixelColor(9, strip.Color(butColour[HUD_SHOW][0],butColour[HUD_SHOW][1],butColour[HUD_SHOW][2]));
-            gps_flash = false;
-          }
-          else {
-            strip.setPixelColor(9, strip.Color(0, 0, 0));
-            gps_flash = true;
-          }
-          strip.show();
-        }
   }
   if (EN_GPS && gps_timesend && gps_goodmessage && GPS.fix) {
 
@@ -519,11 +554,20 @@ void loop() {
       buffPush(GPS_SPEED,gps_speed);
       buffPush(GPS_DAYMONTHYEAR,(unsigned long)((GPS.day<<16) + (GPS.month<<8) + (GPS.year)));
       buffPush(GPS_SECONDMINUTEHOUR,(unsigned long)((GPS.seconds<<16) + (GPS.minute<<8) + (GPS.hour)));
+      if(GPS.minute!=GPS_minute){
+        GPS_year=GPS.year;
+        GPS_year=GPS.year;
+        GPS_month=GPS.month;
+        GPS_day=GPS.day;
+        GPS_hour=GPS.hour;
+        GPS_minute=GPS.minute;
+        GPS_seconds=GPS.seconds;
+      }
       gps_timesend=false;
    }
    if (EN_RPM && millis() - rpmTimer > (RPM_INTERVAL - 1)) {
     rpmTimer=millis();
-    Serial.println(PRIM_rpm);
+    //Serial.println(PRIM_rpm);
     buffPush(RPM_PRIM,(float)PRIM_rpm);
     buffPush(RPM_SEC,(float)SEC_rpm);
    }
@@ -556,5 +600,5 @@ void loop() {
     sdTimer=millis();
     sdSend();
    }
-
+   */
 }
