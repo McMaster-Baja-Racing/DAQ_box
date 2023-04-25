@@ -17,10 +17,7 @@
 #include <Bounce.h>
 
 // Settings
-#define USE_GPS_SPEED //if spd is equal to gps speed or RPM speed
-#define showRPM true //variable to choose whether the HUD shows RPM or SPEED, false for SPEED true for RPM.
 #define SHOW_DEBUG false
-
 bool EN_BATT = true;
 bool EN_HUD = true;
 bool EN_GPS = true;
@@ -28,16 +25,17 @@ bool EN_RPM = true;
 bool EN_TEMP = false;
 bool EN_BRAKE = true;
 bool EN_IMU = true;
-bool EN_STRAIN = true;
-bool EN_SUS = true;
+bool EN_STRAIN1 = true;
+bool EN_STRAIN2 = true;
+bool EN_SUS1 = true;
+bool EN_SUS2 = true;
 bool EN_SEROUT=false;
-
 bool USE_SD = true;
 
 
 
 
-float gps_speed=0;
+
 
 
 // HUD
@@ -63,10 +61,9 @@ int butColour [] [3]={
 {0,0,255},//blue = brake
 {255,255,255},//white = spd
 {138,43,226},//,purple = battery percent
-{138,43,226},//,purple = battery percent
-{255,182,193},//,purple = battery percent
-{170,51,106},//,purple = battery percent
-{150,74,0}};//brown = strain
+{255,182,193},//,light pink = strain1
+{170,51,106},//,dark pink = sus1
+{150,74,0}};//brown = sus2
 
 int HUD_SHOW =PRIM;
 
@@ -119,9 +116,6 @@ Adafruit_GPS GPS(&GPSSerial);
 Adafruit_NeoPixel strip(LED_COUNT, HUD_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
-IntervalTimer strainTimer1;
-IntervalTimer strainTimer2;
-IntervalTimer susTimer;
 //Timers
 unsigned long battTimer = millis();
 unsigned long tempTimer = millis();
@@ -131,8 +125,10 @@ unsigned long rpmTimer=millis();
 unsigned long brakeTimer=millis();
 unsigned long imuTimer=millis();
 unsigned long sdTimer=millis();
-unsigned long strainTimers=millis();
-unsigned long susTimers=millis();
+unsigned long strainTimer1=millis();
+unsigned long susTimer1=millis();
+unsigned long strainTimer2=millis();
+unsigned long susTimer2=millis();
 
 
 uint32_t gpsTimer = millis();
@@ -150,6 +146,8 @@ uint8_t GPS_day=1;
 uint8_t GPS_hour=1; 
 uint8_t GPS_minute=30; 
 uint8_t GPS_seconds=25;
+
+float gps_speed=0;
 
 //SD CARD
 bool send_data = false;
@@ -187,8 +185,8 @@ float SEC_hall_count = 0;
 int SEC_rpm = 0;
 int SEC_counts_per_rotation=3;
 
-int Sus_Travel=0;
-int strain=0;
+int strain1=0;
+int strain2=0;
 
 bool statusLED=0;
 
@@ -224,7 +222,6 @@ int imuGyroCal=false;
 //button bouncer
 Bounce inputButton = Bounce(BUTT_PIN,5);
 int lastPressed=0;
-float maxSize=0;
 
 
 // File name MUST be 8 or less characters
