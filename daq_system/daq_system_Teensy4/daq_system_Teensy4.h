@@ -22,7 +22,7 @@ bool EN_BATT = true;
 bool EN_HUD = true;
 bool EN_GPS = true;
 bool EN_RPM = true;
-bool EN_TEMP = false;
+bool EN_TEMP = true; //uses prim_temp connector on PCB
 bool EN_BRAKE = true;
 bool EN_IMU = true;
 bool EN_STRAIN1 = true;
@@ -68,24 +68,28 @@ int butColour [] [3]={
 int HUD_SHOW =PRIM;
 
 
-float brake_pres=0.0;
+int brake_pres=0.0;
 
 // General
+
+//Interval between each data collection point, this is where you set data logging rate
+//These values are in ms not hz
+
 #define BATT_INTERVAL 10000
 #define IMU_INTERVAL 10 // ms
-#define GPS_INTERVAL 100 // ms (Should be multiple of IMU_INTERVAL)
-#define TEMP_INTERVAL 400 // ms (Should be multiple of IMU_INTERVAL)
+#define GPS_INTERVAL 100 // ms 
 #define LED_INTERVAL 100  // Period in msec for LED update (larger than 100 produces noticable lag)
-#define STRAIN_FREQ 1 //ms
-#define SUS_FREQ 1 //ms
 #define SD_INTERVAL 25
-#define QUEUE_SIZE_INTERVAL 1000
-#define RPM_INTERVAL 10//ms
+#define QUEUE_SIZE_INTERVAL 1000//for debugging purposes, shows you current queue length on serial moniter
 #define BRAKE_INTERVAL 10//ms
 #define STRAIN_INTERVAL 1
-#define SUS_INTERVAL 1
+#define SUS_INTERVAL 5
+#define TEMP_INTERVAL 500
 
 // RPM Sensors
+
+//Threshold for how many magnets until an rpm is recorded, as this number increase noise reduces but data can be missed
+//In 2023 we came to the conclusion that noise is okay and we can filter the data very well in post using the s-golay filter
 #define HALL_THRESH 1
 
 // PINS
@@ -97,16 +101,15 @@ float brake_pres=0.0;
 #define STATUS_PIN 28
 #define HUD_PIN    9      // Digital Pin 6 for HUD LED's
 #define BUTT_PIN 29
-
-
+#define TEMPERATURE_PIN 16
 int strainPin []={20,21,22,23,41,40};
 int susPin[] = {24,25,26,27};
 
-int sus1;
-int sus2;
+
+
 
 //GPS 
-#define GPSSerial Serial2
+#define GPSSerial Serial2 
 
 /***  Start of Global variables  ***/
 /***********************************/
@@ -129,8 +132,6 @@ unsigned long strainTimer1=millis();
 unsigned long susTimer1=millis();
 unsigned long strainTimer2=millis();
 unsigned long susTimer2=millis();
-
-
 uint32_t gpsTimer = millis();
 
 //GPS
@@ -185,11 +186,20 @@ float SEC_hall_count = 0;
 int SEC_rpm = 0;
 int SEC_counts_per_rotation=3;
 
-int strain1=0;
-int strain2=0;
+//strain data
+int strain [6];
 
+//suspension travel data
+int sus1;
+int sus2;
+
+//temperature data
+int temperature;
+
+//Status LED that is connected to the outside of the box
 bool statusLED=0;
 
+/* DEPRICATED FOR WHEN WE USED AN I2C TEMP SENSOR. WE NOW USE THE LM35 WITH A VOLTAGE DIVIDER
 //Temperature Settings
 bool usePrimI2C = true;
 bool useSecI2C = true;
@@ -203,6 +213,7 @@ int tempResolution = 0;
 //  1    0.25°C      65 ms
 //  2    0.125°C     130 ms
 //  3    0.0625°C    250 ms
+*/
 
 //Battery
 float batVoltage = 0;

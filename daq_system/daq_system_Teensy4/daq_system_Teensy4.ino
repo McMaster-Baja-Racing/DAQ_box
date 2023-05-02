@@ -166,15 +166,10 @@ void buffPush(int id, unsigned long tempData) {
   }
 }
 
-void strainData1() {
-  strain1 = analogRead(strainPin[0]);
-  buffPush(STRAIN5, (unsigned long)(strain1));
+void strainData(int offset) {
+  strain[offset] = analogRead(strainPin[offset]);
+  buffPush(STRAIN1+offset, (unsigned long)(strain[offset]));
 }
-void strainData2() {
-  strain2 = analogRead(strainPin[1]);
-  buffPush(STRAIN6, (unsigned long)(strain2));
-}
-
 void susData1() {
   sus1 = analogRead(susPin[0]);
   buffPush(SUS_TRAV_FR, (unsigned long)(sus1));
@@ -183,6 +178,12 @@ void susData2() {
   sus2 = analogRead(susPin[1]);
   buffPush(SUS_TRAV_FL, (unsigned long)(sus2));
 }
+
+void tempData() {
+  temperature = (analogRead(TEMPERATURE_PIN))/2;
+  buffPush(PRIM_TEMP, (unsigned long)(sus2));
+}
+
 
 
 void imuData() {
@@ -288,7 +289,7 @@ void setup() {
   // turn on turn on only the "minimum recommended" data
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   // Set the update rate
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 1 Hz update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 10 Hz update rate
   Serial.println("Setup Finished");
   digitalWrite(STATUS_PIN, LOW);
 
@@ -297,8 +298,22 @@ void setup() {
   delay(1000);
 }
 
-void loop() {
+void loop(){
+  //CALRATION UNCOMMENT THIS LINE AND CHANGE TO YOUR VARIABLE
 
+  //Variable names
+  /*
+  //strain data
+  int strain [6];
+
+  //suspension travel data
+  int sus1;
+  int sus2;
+
+  //temperature data...../
+  int temperature;
+  */
+  //Serial.println()
   inputButton.update();
   if (inputButton.fallingEdge()) {
     Serial.print("Button Pressed: ");
@@ -416,7 +431,7 @@ void loop() {
       }
       if (HUD_SHOW == BRAKE) {
         int numLED = 0;
-        numLED = map(brake_pres, 0, 2000, -1, 8);
+        numLED = map(brake_pres, 0, 1000, -1, 8);
         if (numLED > 8) {
           numLED = 8;
         }
@@ -440,7 +455,7 @@ void loop() {
       }
       if (HUD_SHOW == STRAIN) {
         int numLED = 0;
-        numLED = map(strain1, 0, 1095, -1, 8);
+        numLED = map(temperature, 0, 150, -1, 8);
         if (numLED > 8) {
           numLED = 8;
         }
@@ -562,28 +577,32 @@ void loop() {
   }
   if (EN_BRAKE && millis() - brakeTimer > (BRAKE_INTERVAL - 1)) {
     brakeTimer = millis();
-    brake_pres = ((((analogRead(17) / 1024.0) * 5.15625) - 0.5) * 1250);
+    brake_pres = ((((analogRead(17) / 1024.0) * 5.15625) - 0.4) * 1250);
     buffPush(BRAKE_PRESS, (float)(brake_pres));
   }
   if (EN_IMU && millis() - imuTimer > (IMU_INTERVAL - 1)) {
     imuTimer = millis();
     imuData();
   }
-  if (EN_STRAIN1 && millis() - strainTimer1 > (STRAIN_FREQ - 1)) {
+  if (EN_STRAIN1 && millis() - strainTimer1 > (STRAIN_INTERVAL - 1)) {
     strainTimer1 = millis();
-    strainData1();
+    strainData(0);
   }
-  if (EN_STRAIN2 && millis() - strainTimer2 > (STRAIN_FREQ - 1)) {
+  if (EN_STRAIN2 && millis() - strainTimer2 > (STRAIN_INTERVAL - 1)) {
     strainTimer2 = millis();
-    strainData2();
+    strainData(1);
   }
-  if (EN_SUS1 && millis() - susTimer1 > (SUS_FREQ - 1)) {
+  if (EN_SUS1 && millis() - susTimer1 > (SUS_INTERVAL - 1)) {
     susTimer1 = millis();
     susData1();
   }
-  if (EN_SUS2 && millis() - susTimer2 > (SUS_FREQ - 1)) {
+  if (EN_SUS2 && millis() - susTimer2 > (SUS_INTERVAL - 1)) {
     susTimer2 = millis();
     susData2();
+  }
+  if (EN_TEMP && millis() - tempTimer > (TEMP_INTERVAL - 1)) {
+    tempTimer = millis();
+    tempData();
   }
   if (SHOW_DEBUG && (millis() - queueSizeTimer > (QUEUE_SIZE_INTERVAL - 1))) {
     queueSizeTimer = millis();
