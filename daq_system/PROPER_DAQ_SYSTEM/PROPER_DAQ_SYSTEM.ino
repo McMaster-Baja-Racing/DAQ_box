@@ -2,6 +2,7 @@
 
 #include "daq_system_Teensy4.h"
 #include "datastruct.h"
+#include "TimeLib.h"
 
 
 // Function Declarations
@@ -30,7 +31,7 @@ void dateTime(uint16_t* date, uint16_t* time) {
     year = GPS_year;
     month = GPS_month;
     day = GPS_day;
-    hour = (GPS_hour - 4) % 24;
+    hour = GPS_hour;
     minute = GPS_minute;
     second = GPS_seconds;
   } else {
@@ -47,15 +48,16 @@ void dateTime(uint16_t* date, uint16_t* time) {
   *time = FAT_TIME(hour, minute, second);
 }
 
+
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second) {
   // Only hour, minute and second are saved in UTC time
   // Please move files before start of new day
-  sprintf(filename, "/%02d%02d%02d.bin", (24 + (hour - 5)) % 24, minute, second);
+  sprintf(filename, "/%02d%02d%02d.bin", (hour, minute, second));
 }
 
 void getDirectory(uint8_t day, uint8_t month, uint8_t year) {
   // Please move files before start of new day
-  sprintf(directory, "/%02d-%02d-%02d", day, month, year);
+  sprintf(directory, "/%02d-%02d-%02d", year, month, day);
 }
 void incrementHall_FR() {
   //Serial.println("Front Right RPM Pin Hit");
@@ -170,17 +172,17 @@ void strainData(int offset) {
   strain[offset] = analogRead(strainPin[offset]);
   buffPush(STRAIN1+offset, (unsigned long)(strain[offset]));
 }
-void susData1() { //FR
+void susData1() { //FL
   sus1 = analogRead(susPin[0]);
 //  Serial.print("susdata1: ");
 //  Serial.print(sus1);
   buffPush(SUS_TRAV_FR, (unsigned long)(sus1)); // FR Uncomment this line for sus data to print, temporary
 }
-void susData2() { //FL
+void susData2() { //FR
   sus2 = analogRead(susPin[1]);
 //  Serial.print(" susdata2: ");
 //  Serial.println(sus2);
-//  buffPush(SUS_TRAV_FL, (unsigned long)(sus2)); // FL Temporary
+  buffPush(SUS_TRAV_FL, (unsigned long)(sus2)); // FL Temporary
 }
 
 void susData3() { //RR
@@ -317,12 +319,19 @@ void setup() {
 
 void loop(){
   //CALRATION UNCOMMENT THIS LINE AND CHANGE TO YOUR VARIABLE
+//  Serial.print("Brake pressue (Psi): ");
+//  Serial.println(brake_pres);
+//  delay(50);
+  
 
   //Variable names
-//  Serial.print("prim: ");
-//  Serial.print(PRIM_rpm);
-//  Serial.print(", Sec: ");
-//  Serial.println(SEC_rpm);
+  /*
+  Serial.print("prim: ");
+  Serial.println(PrRIM_rpm);
+  delay(10);
+  Serial.print(", Sec: ");
+  Serial.println(SEC_rpm);
+  */
 
   
 //  strain data
@@ -337,25 +346,25 @@ void loop(){
 //
 //  Serial.println("");
 //  delay(100);
-  
-  //suspension travel data
-//  int sus1;
-//  int sus2;
 
 //  //temperature data...../
 //  int temperature;
   
 
   //DO NOT RUN WITH FINAL CODE
-//  Serial.print("Sus1: ");
-//  Serial.print(sus1);
-//  Serial.print(", Sus2: ");
-//  Serial.print(sus2);
-//  Serial.print(", Sus3: ");
-//  Serial.print(sus3);
-//  Serial.print(", Sus4: ");
-// Serial.println(sus4);
-//  delay(100); 
+//   Serial.print("Sus1: ");
+//   Serial.print(sus1);
+//   Serial.print(", Sus2: ");
+//   Serial.print(sus2);
+//   Serial.print(", Sus3: ");
+//   Serial.print(sus3);
+//   Serial.print(", Sus4: ");
+//  Serial.println(sus4);
+//   delay(100); 
+
+//  Serial.print("Temp (C): ");
+//  Serial.println(temperature);
+//  delay(100);
 
   inputButton.update();
   if (inputButton.fallingEdge()) {
@@ -458,7 +467,7 @@ void loop(){
     if (gps_active) {
 
       if (HUD_SHOW == PRIM) {
-        int numLED = map(PRIM_rpm, 1700, 3600, -1, 8);
+        int numLED = map(PRIM_rpm, 1700, 3800, -1, 8);
         if (numLED > 8) {
           numLED = 8;
         }
@@ -474,7 +483,7 @@ void loop(){
       }
       if (HUD_SHOW == BRAKE) {
         int numLED = 0;
-        numLED = map(brake_pres, 0, 100, -1, 8);
+        numLED = map(brake_pres, 0, 1200, -1, 8);
         
         if (numLED > 8) {
           numLED = 8;
@@ -604,6 +613,7 @@ void loop(){
 
     buffPush(GPS_ANGLE, GPS.angle);
 
+    // GPS speed is in knots
     gps_speed = GPS.speed * 1.852;
     buffPush(GPS_SPEED, gps_speed);
     buffPush(GPS_DAYMONTHYEAR, (unsigned long)((GPS.day << 16) + (GPS.month << 8) + (GPS.year)));

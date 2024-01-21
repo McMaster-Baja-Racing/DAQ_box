@@ -27,10 +27,10 @@ bool EN_BRAKE = true;
 bool EN_IMU = false;
 bool EN_STRAIN1 = false;
 bool EN_STRAIN2 = false;
-bool EN_SUS1 = false;
-bool EN_SUS2 = false;
-bool EN_SUS3 = false;
-bool EN_SUS4 = false;
+bool EN_SUS1 = true;
+bool EN_SUS2 = true;
+bool EN_SUS3 = true;
+bool EN_SUS4 = true;
 bool EN_SEROUT= false;
 bool USE_SD = true;
 
@@ -67,7 +67,7 @@ int butColour [] [3]={
 {170,51,106},//,dark pink = sus1
 {150,74,0}};//brown = sus2
 
-int HUD_SHOW =PRIM;
+int HUD_SHOW =BRAKE;
 
 
 int brake_pres=0.0;
