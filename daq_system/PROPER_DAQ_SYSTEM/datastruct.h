@@ -1,4 +1,3 @@
-
 #include "RingBuff.h"
 
 const int dataBufferSize=1024*10;
@@ -6,7 +5,6 @@ const int dataBufferSize=1024*10;
 typedef struct dataStruct_t
 {
   unsigned long timeStamp_typ; // 32 bits
-    
   union 
   {
     unsigned long data_long;
