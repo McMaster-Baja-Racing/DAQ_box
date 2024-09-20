@@ -202,7 +202,7 @@ int sus4;
 int temperature;
 
 /***  Status LED that is connected to the outside of the box  ***/ 
-bool statusLED=0;
+bool statusLED = 0;
 
 /***  Battery  ***/ 
 float batVoltage = 0;

@@ -1,22 +1,15 @@
-   
-
 #include "daq_system_Teensy4.h"
 #include "datastruct.h"
 #include "TimeLib.h"
-
 
 // Function Declarations
 void setColour(int8_t edge);  // turns off LEDs from (start to edge)
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second);
 void getDirectory(uint8_t day, uint8_t month, uint8_t year);
-void incrementHall_FR();
-void incrementHall_FL();
-void incrementHall_SEC();
-void incrementHall_PRIM();
 void setColour(int8_t edge);
 void sdSend();
-void buffPush(int id, float tempData);
-void buffPush(int id, unsigned long tempData);
+void buffPush(int id, float tempData); // Overloaded function to push data to the saving buffer with float data
+void buffPush(int id, unsigned long tempData); // Overloaded function to push data to the saving buffer with unsigned long data
 void strainData();
 void imuData();
 void susData();
@@ -42,12 +35,11 @@ void dateTime(uint16_t* date, uint16_t* time) {
     minute = 2;
     second = 50;
   }
-  // return date using FAT_DATE macro to format fields
+  // Return date using FAT_DATE macro to format fields
   *date = FAT_DATE(year, month, day);
-  // return time using FAT_TIME macro to format fields
+  // Return time using FAT_TIME macro to format fields
   *time = FAT_TIME(hour, minute, second);
 }
-
 
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second) {
   // Only hour, minute and second are saved in UTC time
@@ -59,23 +51,6 @@ void getDirectory(uint8_t day, uint8_t month, uint8_t year) {
   // Please move files before start of new day
   sprintf(directory, "/%02d-%02d-%02d", year, month, day);
 }
-void incrementHall_FR() {
-  //Serial.println("Front Right RPM Pin Hit");
-  FR_hall_count += 1;
-}
-void incrementHall_FL() {
-  //Serial.println("Front Left RPM Pin Hit");
-  FL_hall_count += 1;
-}
-void incrementHall_SEC() {
-  //Serial.println("Secondary RPM Pin Hit");
-  SEC_hall_count += 1;
-}
-
-void incrementHall_PRIM() {
-  //Serial.println("PRIM RPM Pin Hit");
-  PRIM_hall_count += 1;
-}
 
 void setColour(int8_t edge) {
   // Set all setColour to off/0
@@ -85,7 +60,7 @@ void setColour(int8_t edge) {
   const uint8_t G[10] = { 0, 80, 150, 200, 200, 235, 255, 255, 0, 0 };
   const uint8_t B[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 };
 
-  //Set pixel colour up to strip[edge]
+  // Set pixel colour up to strip[edge]
   for (uint8_t i = 0; i <= edge; i++) {
     strip.setPixelColor(i, strip.Color(R[i], G[i], B[i]));
   }
@@ -93,78 +68,82 @@ void setColour(int8_t edge) {
 }
 
 void sdSend() {
-
+  // Check if GPS is active
   if (gps_active) {
+    // Swap the saving and processing buffers
     if (savingBuff == &buff1) {
-      savingBuff = &buff2;
-      sdBuff = &buff1;
+      savingBuff = &buff2; // Set saving buffer to buff2
+      sdBuff = &buff1; // Set processing buffer to buff1
     } else if (savingBuff == &buff2) {
-      savingBuff = &buff1;
-      sdBuff = &buff2;
+      savingBuff = &buff1; // Set saving buffer to buff1
+      sdBuff = &buff2; //  Set processing buffer to buff2
     }
+    // Toggle the status LED
     statusLED = !statusLED;
     digitalWrite(STATUS_PIN, statusLED);
+    // Temporary array to hold data for writing to SD
     dataStruct sdTemp[8];
     int counter = 0;
     unsigned long str = millis();
+    // Process the data from the sdBuff while its not empty
     while (!(*sdBuff).isEmpty()) {
+      // Check if the time has exceeded 100ms
       if (millis() > (str + 100)) {
         Serial.println("SD LONG BOI");
         break;
       }
+      // Pop the data from the sdBuff and push it to the sdTemp array
       (*sdBuff).pop(sdTemp[counter]);
+      // Check if the counter has reached 7 and write the data to the SD card
       if (counter >= 7) {
         bajaData.write((uint8_t*)&sdTemp, sizeof(sdTemp));
         counter = -1;
       }
+      // Increment the counter
       counter++;
     }
+    // Write the remaining data to the SD card
     if (counter != 0 && millis() <= (str + 100)) {
       bajaData.write((uint8_t*)&sdTemp, sizeof(sdTemp));
     }
-    bajaData.flush();
-  } else {
-    //Serial.println("gps not active");
+    // Flush the data to the SD card
+    bajaData.flush(); 
   }
 }
 
+// Function to push data to the saving buffer with float data
 void buffPush(int id, float tempData) {
+  // Check if the SD card is not being used and the serial output is enabled
   if (!USE_SD && EN_SEROUT) {
-    Serial.print("FL* ID: ");
-    Serial.print(DataTypeNames[id]);
-    Serial.print(" Data: ");
-    Serial.println(tempData, 4);
+    // Print the ID and data type to the Serial monitor for debugging
+    Serial.print("FL* ID: " + String(DataTypeNames[id]) + " Data: " + String(tempData, 4));
     return;
   }
+  // Set the timestamp and type for the data
   temp.timeStamp_typ = (millis() << 6) | id;
   temp.data_float = tempData;
+  // Check if the GPS is active and push the data to the saving buffer
   if (gps_active && !(*savingBuff).push(temp)) {
-    Serial.println("Lost Data");
-    Serial.print("savingBuff Size = ");
-    Serial.println((*savingBuff).size());
-
-    Serial.print("sdBuff Size = ");
-    Serial.println((*sdBuff).size());
+    // Print a message to the Serial monitor if the data is lost
+    Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
   }
 }
 
+// Function to push data to the saving buffer with unsigned long data
 void buffPush(int id, unsigned long tempData) {
+  // Check if the SD card is not being used and the serial output is enabled
   if (!USE_SD && EN_SEROUT) {
-    Serial.print("UL* ID: ");
-    Serial.print(DataTypeNames[id]);
-    Serial.print(" Data: ");
-    Serial.println(tempData);
+    // Print the ID and data type to the Serial monitor for debugging
+    Serial.println("UL* ID: " + String(DataTypeNames[id]) + " Data: " + String(tempData));
     return;
   }
+  // Set the timestamp and type for the data
   temp.timeStamp_typ = (millis() << 6) | id;
   temp.data_long = tempData;
+  // Check if the GPS is active and push the data to the saving buffer
   if (gps_active && !(*savingBuff).push(temp)) {
-    Serial.println("Lost Data");
-    Serial.print("savingBuff Size = ");
-    Serial.println((*savingBuff).size());
-
-    Serial.print("sdBuff Size = ");
-    Serial.println((*sdBuff).size());
+    // Print a message to the Serial monitor if the data is lost
+    Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
   }
 }
 
@@ -172,25 +151,28 @@ void strainData(int offset) {
   strain[offset] = analogRead(strainPin[offset]);
   buffPush(STRAIN1+offset, (unsigned long)(strain[offset]));
 }
-void susData1() { //FL
+
+void susData1() { // Front Left
   sus1 = analogRead(susPin[0]);
 //  Serial.print("susdata1: ");
 //  Serial.print(sus1);
   buffPush(SUS_TRAV_FR, (unsigned long)(sus1)); // FR Uncomment this line for sus data to print, temporary
 }
-void susData2() { //FR
+
+void susData2() { // Front Right
   sus2 = analogRead(susPin[1]);
 //  Serial.print(" susdata2: ");
 //  Serial.println(sus2);
   buffPush(SUS_TRAV_FL, (unsigned long)(sus2)); // FL Temporary
 }
 
-void susData3() { //RR
+void susData3() { // Rear Right
   sus3 = analogRead(susPin[2]);
-//  Serial.print("susdata3: ");
+  //Serial.print("susdata3: ");
   //Serial.println(sus3);
   buffPush(SUS_TRAV_RR, (unsigned long)(sus3));
 }
+
 void susData4() { // This is the data for the steering column
   sus4 = analogRead(susPin[3]);
 //  Serial.print("susdata4: ");
@@ -215,7 +197,6 @@ void imuData() {
   gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
   gravity = bno.getVector(Adafruit_BNO055::VECTOR_GRAVITY);
 
-
   if (system_cal > 0) {
     buffPush(IMU_ABS_X, ((float)event.orientation.x));
     buffPush(IMU_ABS_Y, ((float)event.orientation.y));
@@ -223,7 +204,6 @@ void imuData() {
     buffPush(IMU_TEMP, (unsigned long)bno.getTemp());
   }
   if (accel_cal > 0) {
-
     buffPush(IMU_ACCEL_X, float(accel.x()));
     buffPush(IMU_ACCEL_Y, float(accel.y()));
     buffPush(IMU_ACCEL_Z, float(accel.z()));
@@ -233,7 +213,6 @@ void imuData() {
     buffPush(IMU_GRAVITY_Z, float(gravity.z()));
   }
   if (gyro_cal > 0) {
-
     buffPush(IMU_GYRO_X, float(gyro.x()));
     buffPush(IMU_GYRO_Y, float(gyro.y()));
     buffPush(IMU_GYRO_Z, float(gyro.z()));
@@ -256,10 +235,10 @@ void setup() {
   pinMode(FR_HALL_PIN, INPUT_PULLUP);
   pinMode(SEC_HALL_PIN, INPUT_PULLUP);
   pinMode(PRIM_HALL_PIN, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, RISING);
-  attachInterrupt(digitalPinToInterrupt(FL_HALL_PIN), incrementHall_FL, RISING);
-  attachInterrupt(digitalPinToInterrupt(SEC_HALL_PIN), incrementHall_SEC, RISING);
-  attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), incrementHall_PRIM, RISING);
+  attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), FR_hall_count += 1, RISING);
+  attachInterrupt(digitalPinToInterrupt(FL_HALL_PIN), FL_hall_count += 1, RISING);
+  attachInterrupt(digitalPinToInterrupt(SEC_HALL_PIN), SEC_hall_count += 1, RISING);
+  attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), PRIM_hall_count += 1, RISING);
 
   pinMode(STATUS_PIN, OUTPUT);
 
@@ -465,76 +444,42 @@ void loop(){
   if (EN_HUD && millis() - ledTimer > LED_INTERVAL) {
     ledTimer = millis();
     if (gps_active) {
-
-      if (HUD_SHOW == PRIM) {
-        int numLED = map(PRIM_rpm, 1700, 3800, -1, 8);
-        if (numLED > 8) {
-          numLED = 8;
-        }
-        setColour(numLED);
+      int numLED = 0;
+      switch (HUD_SHOW) {
+        case PRIM:
+          numLED = map(PRIM_rpm, 1700, 3800, -1, 8);
+          break;
+        case SEC:
+          numLED = map(SEC_rpm, 0, 5000, -1, 8);
+          break;
+        case BRAKE:
+          numLED = map(brake_pres, 0, 1200, -1, 8);
+          break;
+        case GPS_S:
+          numLED = map(gps_speed, 5, 45, -1, 8);
+          break;
+        case BATT_PERCENT:
+          numLED = map(batPercent, 0, 100, -1, 8);
+          break;
+        case STRAIN:
+          numLED = map(temperature, 0, 150, -1, 8);
+          break;
+        case SUS1:
+          numLED = map(sus1, 140, 310, -1, 8);
+          break;
+        case SUS2:
+          numLED = map(sus2, 50, 312, -1, 8);
+          break;
       }
-      if (HUD_SHOW == SEC) {
-        int numLED = 0;
-        numLED = map(SEC_rpm, 0, 5000, -1, 8);
-        if (numLED > 8) {
-          numLED = 8;
+      if (numLED > 8) {
+            numLED = 8;
         }
-        setColour(numLED);
-      }
-      if (HUD_SHOW == BRAKE) {
-        int numLED = 0;
-        numLED = map(brake_pres, 0, 1200, -1, 8);
-        
-        if (numLED > 8) {
-          numLED = 8;
-        }
-        setColour(numLED);
-      }
-      if (HUD_SHOW == GPS_S) {
-        int numLED = 0;
-        numLED = map(gps_speed, 5, 45, -1, 8);
-        if (numLED > 8) {
-          numLED = 8;
-        }
-        setColour(numLED);
-      }
-      if (HUD_SHOW == BATT_PERCENT) {
-        int numLED = 0;
-        numLED = map(batPercent, 0, 100, -1, 8);
-        if (numLED > 8) {
-          numLED = 8;
-        }
-        setColour(numLED);
-      }
-      if (HUD_SHOW == STRAIN) {
-        int numLED = 0;
-        numLED = map(temperature, 0, 150, -1, 8);
-        if (numLED > 8) {
-          numLED = 8;
-        }
-        setColour(numLED);
-      }
-      if (HUD_SHOW == SUS1) {
-        int numLED = 0;
-        numLED = map(sus1, 140, 310, -1, 8);
-        if (numLED > 8) {
-          numLED = 8;
-        }
-        setColour(numLED);
-      }
-      if (HUD_SHOW == SUS2) {
-        int numLED = 0;
-        numLED = map(sus2, 50, 312, -1, 8);
-        if (numLED > 8) {
-          numLED = 8;
-        }
-        setColour(numLED);
-      }
+      setColour(numLED);
     }
     strip.show();  // Send the updated pixel colors to the hardware.
   }
 
-  // read data from the GPS in the 'main loop'
+  // Read data from the GPS in the 'main loop'
   GPS.read();                   // c is raw gps data
   if (GPS.newNMEAreceived()) {  // Interrupt signal for GPS signal
     // Do not handle or output data in this section. Only store it.
