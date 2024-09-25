@@ -69,7 +69,7 @@ int butColour [] [3] = {
   {150,74,0}  // Brown = sus2
 };  
 
-int HUD_SHOW =BRAKE;
+int HUD_SHOW = BRAKE;
 
 int brake_pres = 0.0;
 

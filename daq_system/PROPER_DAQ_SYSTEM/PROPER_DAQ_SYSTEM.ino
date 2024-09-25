@@ -68,15 +68,14 @@ void setColour(int8_t edge) {
 }
 
 void sdSend() {
-  // Check if GPS is active
   if (gps_active) {
     // Swap the saving and processing buffers
     if (savingBuff == &buff1) {
-      savingBuff = &buff2; // Set saving buffer to buff2
-      sdBuff = &buff1; // Set processing buffer to buff1
+      savingBuff = &buff2;
+      sdBuff = &buff1;
     } else if (savingBuff == &buff2) {
-      savingBuff = &buff1; // Set saving buffer to buff1
-      sdBuff = &buff2; //  Set processing buffer to buff2
+      savingBuff = &buff1;
+      sdBuff = &buff2;
     }
     // Toggle the status LED
     statusLED = !statusLED;
@@ -87,19 +86,17 @@ void sdSend() {
     unsigned long str = millis();
     // Process the data from the sdBuff while its not empty
     while (!(*sdBuff).isEmpty()) {
-      // Check if the time has exceeded 100ms
       if (millis() > (str + 100)) {
         Serial.println("SD LONG BOI");
         break;
       }
       // Pop the data from the sdBuff and push it to the sdTemp array
       (*sdBuff).pop(sdTemp[counter]);
-      // Check if the counter has reached 7 and write the data to the SD card
+      // If the counter is 7, write the data to the SD card
       if (counter >= 7) {
         bajaData.write((uint8_t*)&sdTemp, sizeof(sdTemp));
         counter = -1;
       }
-      // Increment the counter
       counter++;
     }
     // Write the remaining data to the SD card
@@ -113,9 +110,7 @@ void sdSend() {
 
 // Function to push data to the saving buffer with float data
 void buffPush(int id, float tempData) {
-  // Check if the SD card is not being used and the serial output is enabled
   if (!USE_SD && EN_SEROUT) {
-    // Print the ID and data type to the Serial monitor for debugging
     Serial.print("FL* ID: " + String(DataTypeNames[id]) + " Data: " + String(tempData, 4));
     return;
   }
@@ -124,7 +119,6 @@ void buffPush(int id, float tempData) {
   temp.data_float = tempData;
   // Check if the GPS is active and push the data to the saving buffer
   if (gps_active && !(*savingBuff).push(temp)) {
-    // Print a message to the Serial monitor if the data is lost
     Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
   }
 }
@@ -133,7 +127,6 @@ void buffPush(int id, float tempData) {
 void buffPush(int id, unsigned long tempData) {
   // Check if the SD card is not being used and the serial output is enabled
   if (!USE_SD && EN_SEROUT) {
-    // Print the ID and data type to the Serial monitor for debugging
     Serial.println("UL* ID: " + String(DataTypeNames[id]) + " Data: " + String(tempData));
     return;
   }
@@ -142,7 +135,6 @@ void buffPush(int id, unsigned long tempData) {
   temp.data_long = tempData;
   // Check if the GPS is active and push the data to the saving buffer
   if (gps_active && !(*savingBuff).push(temp)) {
-    // Print a message to the Serial monitor if the data is lost
     Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
   }
 }
@@ -188,14 +180,13 @@ void tempData() {
 }
 
 void imuData() {
-  // Retrieve teh latest IMU event data
+  // Retrieve the latest IMU event data
   bno.getEvent(&event);
 
   // Initialize the variables for the IMU data
   uint8_t system_cal, gyro_cal, accel_cal, mag_cal;
   system_cal = gyro_cal = accel_cal = mag_cal = 0;
 
-  // Get the calibration status of the IMU
   bno.getCalibration(&system_cal, &gyro_cal, &accel_cal, &mag_cal);
 
   // Get the accelerometer, gyro, and gravity vectors
@@ -240,9 +231,9 @@ void setup() {
   Serial.println("Setup Starting");
 
   // Set up LED Strip
-  strip.begin();                    // INITIALIZE NeoPixel strip object (REQUIRED)
-  strip.show();                     // Turn OFF all strip ASAP
-  strip.setBrightness(BRIGHTNESS);  // Set BRIGHTNESS (max = 255)
+  strip.begin();
+  strip.show();
+  strip.setBrightness(BRIGHTNESS);
   delay(50);
 
   // Configure the hall sensors pins 
@@ -279,14 +270,16 @@ void setup() {
   if (USE_SD) {
     // Attempt to initialize the SD card
     if (!SD.begin(chipSelect)) {
-      Serial.println("Card failed, or not present"); // Error message
-      strip.setPixelColor(1, strip.Color(255, 0, 0)); // Set LED to Red
+      // If the SD card fails to initialize, set the status LED to red
+      Serial.println("Card failed, or not present");
+      strip.setPixelColor(1, strip.Color(255, 0, 0));
       strip.show();
       USE_SD = false; // Disable SD card usage
     } else {
-      SdFile::dateTimeCallback(dateTime); // Set the date and time callback
-      Serial.println("CARD SUCCESS"); // Success message
-      strip.setPixelColor(1, strip.Color(0, 255, 0)); // Set LED to Green
+      // If the SD card initializes successfully, set the status LED to green
+      SdFile::dateTimeCallback(dateTime);
+      Serial.println("CARD SUCCESS");
+      strip.setPixelColor(1, strip.Color(0, 255, 0));
     }
     strip.show();
     delay(500);
@@ -294,32 +287,35 @@ void setup() {
 
   // Set up GPS
   if (!GPS.begin(9600)) {
-    strip.setPixelColor(2, strip.Color(255, 0, 0)); // Set LED to Red
-    Serial.println("GPS failed, or not present"); // Error message
-    use_gps = false; // Disable GPS usage
+    // If the GPS fails to initialize, set the status LED to red
+    strip.setPixelColor(2, strip.Color(255, 0, 0));
+    Serial.println("GPS failed, or not present");
+    use_gps = false;
   } else {
-    strip.setPixelColor(2, strip.Color(0, 255, 0)); // Set LED to Green
-    Serial.println("GPS SUCCESS"); // Success message
+    // If the GPS initializes successfully, set the status LED to green
+    strip.setPixelColor(2, strip.Color(0, 255, 0));
+    Serial.println("GPS SUCCESS");
   }
   strip.show();
   // Congfigure the GPS settings
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY); // Minimum recommended data
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 10 Hz update rate
 
-  Serial.println("Setup Finished"); // Setup complete message
-  digitalWrite(STATUS_PIN, LOW); // Turn off the status LED
+  Serial.println("Setup Finished");
+  digitalWrite(STATUS_PIN, LOW);
 
   delay(1000);
 }
 
 void loop(){
-  //CALRATION UNCOMMENT THIS LINE AND CHANGE TO YOUR VARIABLE
-//  Serial.print("Brake pressue (Psi): ");
-//  Serial.println(brake_pres);
-//  delay(50);
-  
+  // CALIBRATION UNCOMMENT THIS LINE AND CHANGE TO YOUR VARIABLE
+  /*
+  Serial.print("Brake pressue (Psi): ");
+  Serial.println(brake_pres);
+  delay(50);
+  */
 
-  //Variable names
+  // Variable names
   /*
   Serial.print("prim: ");
   Serial.println(PrRIM_rpm);
@@ -328,68 +324,86 @@ void loop(){
   Serial.println(SEC_rpm);
   */
 
+  //  Strain data
+  /*
+  int strain [6];
+
+  for (int i = 0; i < 6; i++) {
+    Serial.print(i);
+    Serial.print(" is: ");
+    Serial.print(strain[i]);
+    Serial.print("  |  ");
+  }
+
+  Serial.println("");
+  delay(100);
+  */
+
+  // Temperature data
+  /*
+  int temperature;
+  */
   
-//  strain data
-//  int strain [6];
-//
-//  for (int i = 0; i < 6; i++) {
-//    Serial.print(i);
-//    Serial.print(" is: ");
-//    Serial.print(strain[i]);
-//    Serial.print("  |  ");
-//  }
-//
-//  Serial.println("");
-//  delay(100);
-
-//  //temperature data...../
-//  int temperature;
-  
-
-  //DO NOT RUN WITH FINAL CODE
-//   Serial.print("Sus1: ");
-//   Serial.print(sus1);
-//   Serial.print(", Sus2: ");
-//   Serial.print(sus2);
-//   Serial.print(", Sus3: ");
-//   Serial.print(sus3);
-//   Serial.print(", Sus4: ");
-//  Serial.println(sus4);
-//   delay(100); 
-
-//  Serial.print("Temp (C): ");
-//  Serial.println(temperature);
-//  delay(100);
+  // DO NOT RUN WITH FINAL CODE
+  /*
+  Serial.print("Sus1: ");
+  Serial.print(sus1);
+  Serial.print(", Sus2: ");
+  Serial.print(sus2);
+  Serial.print(", Sus3: ");
+  Serial.print(sus3);
+  Serial.print(", Sus4: ");
+  Serial.println(sus4);
+  delay(100); 
+  Serial.print("Temp (C): ");
+  Serial.println(temperature);
+  delay(100);
+  */
 
   inputButton.update();
+
+  //Check if the button is pressed
   if (inputButton.fallingEdge()) {
     Serial.print("Button Pressed: ");
+
     if (gps_active) {
-      HUD_SHOW = (HUD_SHOW + 1) % HUD_MODES;
-      Serial.print(" Mode = ");
+      HUD_SHOW = (HUD_SHOW + 1) % HUD_MODES; // Cycle through the HUD modes
+      Serial.print(" Mode = "); 
       Serial.print(HUD_SHOW);
     } else {
+      // If the button was presed within the last 250ms
       if (millis() - lastPressed < 250) {
-        Serial.println("Start recording");
+        Serial.println("Start recording"); 
         EN_GPS = false;
         gps_active = true;
+
+        // Create a directory for SD storage
         SD.mkdir(directory);
         Serial.println(filename);
         Serial.println(directory);
+
+        // Construct the file path for the SD card
         strcpy(fileDir, directory);
         strcat(fileDir, filename);
         Serial.println(fileDir);
-        bajaData = SD.open(fileDir, FILE_WRITE);  // Create file
+
+        // Open the file for writing
+        bajaData = SD.open(fileDir, FILE_WRITE);
         if (bajaData == 0) {
           Serial.println("File failed to write");
-          // don't do anything more:
           USE_SD = false;
         }
-        //bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time, Primary Temp i2c, Secondary Temp i2c, Suspension Travel, Strain, FR_RPM, SEC_RPM,Battery Percentage, Battery Voltage");
+
+        // File header example
+        // bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time, Primary Temp i2c, Secondary Temp i2c, Suspension Travel, Strain, FR_RPM, SEC_RPM,Battery Percentage, Battery Voltage");
+        
         gps_flash = true;
+
+        // Set the LED strip to green
         for (int i = 0; i < LED_COUNT; i++) {
           strip.setPixelColor(i, strip.Color(0, 255, 0));
         }
+
         Serial.print("GPS cancelled");
         digitalWrite(STATUS_PIN, HIGH);
         strip.show();
@@ -404,7 +418,6 @@ void loop(){
   //-------------RPM----------------------
   if (EN_RPM) {
     if (SEC_hall_count > HALL_THRESH) {
-      // print information about Time and spd
       SEC_end_time = micros();
       SEC_past_time = (SEC_end_time - SEC_start);
       if (SEC_stopped) {
@@ -421,7 +434,6 @@ void loop(){
     }
 
     if (PRIM_hall_count > HALL_THRESH) {
-      // print information about Time and spd
       PRIM_end_time = micros();
       PRIM_past_time = (PRIM_end_time - PRIM_start);
       if (PRIM_stopped) {
@@ -461,6 +473,7 @@ void loop(){
     ledTimer = millis();
     if (gps_active) {
       int numLED = 0;
+      // Switch statement to determine which data to display on the LED strip
       switch (HUD_SHOW) {
         case PRIM:
           numLED = map(PRIM_rpm, 1700, 3800, -1, 8);
