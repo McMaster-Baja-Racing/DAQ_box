@@ -154,144 +154,160 @@ void strainData(int offset) {
 
 void susData1() { // Front Left
   sus1 = analogRead(susPin[0]);
-//  Serial.print("susdata1: ");
-//  Serial.print(sus1);
-  buffPush(SUS_TRAV_FR, (unsigned long)(sus1)); // FR Uncomment this line for sus data to print, temporary
+  //  Serial.print("susdata1: ");
+  //  Serial.print(sus1);
+  buffPush(SUS_TRAV_FR, (unsigned long)(sus1));
 }
 
 void susData2() { // Front Right
   sus2 = analogRead(susPin[1]);
-//  Serial.print(" susdata2: ");
-//  Serial.println(sus2);
-  buffPush(SUS_TRAV_FL, (unsigned long)(sus2)); // FL Temporary
+  //  Serial.print(" susdata2: ");
+  //  Serial.println(sus2);
+  buffPush(SUS_TRAV_FL, (unsigned long)(sus2)); 
 }
 
 void susData3() { // Rear Right
   sus3 = analogRead(susPin[2]);
-  //Serial.print("susdata3: ");
-  //Serial.println(sus3);
+  //  Serial.print("susdata3: ");
+  //  Serial.println(sus3);
   buffPush(SUS_TRAV_RR, (unsigned long)(sus3));
 }
 
 void susData4() { // This is the data for the steering column
   sus4 = analogRead(susPin[3]);
-//  Serial.print("susdata4: ");
-//  Serial.println(sus4);
-//  buffPush(STRAIN6, (unsigned long)(sus4));
+  //  Serial.print("susdata4: ");
+  //  Serial.println(sus4);
+  //  buffPush(STRAIN6, (unsigned long)(sus4));
 }
 
 void tempData() {
   temperature = (analogRead(TEMPERATURE_PIN))/*/2*/;
-  //Serial.print("primtemp: ");
-  //Serial.println(temperature);
+  //  Serial.print("primtemp: ");
+  //  Serial.println(temperature);
   buffPush(PRIM_TEMP, (unsigned long)(temperature));
 }
 
 void imuData() {
+  // Retrieve teh latest IMU event data
   bno.getEvent(&event);
+
+  // Initialize the variables for the IMU data
   uint8_t system_cal, gyro_cal, accel_cal, mag_cal;
   system_cal = gyro_cal = accel_cal = mag_cal = 0;
+
+  // Get the calibration status of the IMU
   bno.getCalibration(&system_cal, &gyro_cal, &accel_cal, &mag_cal);
 
+  // Get the accelerometer, gyro, and gravity vectors
   accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
   gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
   gravity = bno.getVector(Adafruit_BNO055::VECTOR_GRAVITY);
 
+  // Check if the IMU is calibrated
   if (system_cal > 0) {
+    // Push the orientation data to the buffer
     buffPush(IMU_ABS_X, ((float)event.orientation.x));
     buffPush(IMU_ABS_Y, ((float)event.orientation.y));
     buffPush(IMU_ABS_Z, ((float)event.orientation.z));
+    // Push the temperature data to the buffer
     buffPush(IMU_TEMP, (unsigned long)bno.getTemp());
   }
+
+  // Check if the accelerometer is calibrated
   if (accel_cal > 0) {
+    // Push the accelerometer data to the buffer
     buffPush(IMU_ACCEL_X, float(accel.x()));
     buffPush(IMU_ACCEL_Y, float(accel.y()));
     buffPush(IMU_ACCEL_Z, float(accel.z()));
-
+    // Push the gravity data to the buffer
     buffPush(IMU_GRAVITY_X, float(gravity.x()));
     buffPush(IMU_GRAVITY_Y, float(gravity.y()));
     buffPush(IMU_GRAVITY_Z, float(gravity.z()));
   }
+
+  // Check if the gyro is calibrated
   if (gyro_cal > 0) {
+    // Push the gyro data to the buffer
     buffPush(IMU_GYRO_X, float(gyro.x()));
     buffPush(IMU_GYRO_Y, float(gyro.y()));
     buffPush(IMU_GYRO_Z, float(gyro.z()));
   }
 }
 
-
 void setup() {
+  // Intialize the serial communication
   Serial.begin(115200);
-
   Serial.println("Setup Starting");
-  //Serial.println(sizeof(sdBuff));
-  // Set up led strip
+
+  // Set up LED Strip
   strip.begin();                    // INITIALIZE NeoPixel strip object (REQUIRED)
   strip.show();                     // Turn OFF all strip ASAP
   strip.setBrightness(BRIGHTNESS);  // Set BRIGHTNESS (max = 255)
   delay(50);
 
+  // Configure the hall sensors pins 
   pinMode(FR_HALL_PIN, INPUT_PULLUP);
   pinMode(FR_HALL_PIN, INPUT_PULLUP);
   pinMode(SEC_HALL_PIN, INPUT_PULLUP);
   pinMode(PRIM_HALL_PIN, INPUT_PULLUP);
+
+  // Attach the interrupts to hall sensors to count rising edges
   attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), FR_hall_count += 1, RISING);
   attachInterrupt(digitalPinToInterrupt(FL_HALL_PIN), FL_hall_count += 1, RISING);
   attachInterrupt(digitalPinToInterrupt(SEC_HALL_PIN), SEC_hall_count += 1, RISING);
   attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), PRIM_hall_count += 1, RISING);
 
+  // Set up status pin as output
   pinMode(STATUS_PIN, OUTPUT);
 
   delay(1000);
-  // Set up imu
+
+  // Setup IMU
   if (!bno.begin()) {
-    // There was a problem detecting the BNO055 ... check your connections
+    // If the IMU fails to initialize, set the status LED to red
     Serial.println("BNO FAILURE");
     strip.setPixelColor(0, strip.Color(255, 0, 0));
   } else {
+    // If the IMU initializes successfully, set the status LED to green
     strip.setPixelColor(0, strip.Color(0, 255, 0));
     Serial.println("BNO SUCCESS");
   }
   strip.show();
   delay(500);
 
+  // SD Card Setup
   if (USE_SD) {
-    // SD Card Setup
+    // Attempt to initialize the SD card
     if (!SD.begin(chipSelect)) {
-      Serial.println("Card failed, or not present");
-      strip.setPixelColor(1, strip.Color(255, 0, 0));
+      Serial.println("Card failed, or not present"); // Error message
+      strip.setPixelColor(1, strip.Color(255, 0, 0)); // Set LED to Red
       strip.show();
-      // don't do anything more:
-      USE_SD = false;
+      USE_SD = false; // Disable SD card usage
     } else {
-      SdFile::dateTimeCallback(dateTime);
-      Serial.println("CARD SUCCESS");
-      strip.setPixelColor(1, strip.Color(0, 255, 0));
+      SdFile::dateTimeCallback(dateTime); // Set the date and time callback
+      Serial.println("CARD SUCCESS"); // Success message
+      strip.setPixelColor(1, strip.Color(0, 255, 0)); // Set LED to Green
     }
     strip.show();
-
     delay(500);
   }
 
-
   // Set up GPS
   if (!GPS.begin(9600)) {
-    strip.setPixelColor(2, strip.Color(255, 0, 0));
-    Serial.println("GPS failed, or not present");
-    use_gps = false;
+    strip.setPixelColor(2, strip.Color(255, 0, 0)); // Set LED to Red
+    Serial.println("GPS failed, or not present"); // Error message
+    use_gps = false; // Disable GPS usage
   } else {
-    strip.setPixelColor(2, strip.Color(0, 255, 0));
-    Serial.println("GPS SUCCESS");
+    strip.setPixelColor(2, strip.Color(0, 255, 0)); // Set LED to Green
+    Serial.println("GPS SUCCESS"); // Success message
   }
   strip.show();
-  // turn on turn on only the "minimum recommended" data
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
-  // Set the update rate
+  // Congfigure the GPS settings
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY); // Minimum recommended data
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 10 Hz update rate
-  Serial.println("Setup Finished");
-  digitalWrite(STATUS_PIN, LOW);
 
-
+  Serial.println("Setup Finished"); // Setup complete message
+  digitalWrite(STATUS_PIN, LOW); // Turn off the status LED
 
   delay(1000);
 }
