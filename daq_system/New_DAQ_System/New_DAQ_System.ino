@@ -1,175 +1,35 @@
-#include "daq_system_Teensy4.h"
-#include "datastruct.h"
+#include "GlobalVars.h"
+#include "datastruct2.h"
 #include "TimeLib.h"
+#include "GPSHeader.h"
+#include "HUD/HUDHeader.h"
+#include "PRIM&SEC/PRIMSECHeader.h"
+#include "SDCard/SDCardHeader.h"
+#include "IMU/IMUHeader.h"
+#include "SUS/SUSHeader.h"
+#include "STRAIN/STRAINHeader.h"
 
-// Function Declarations
-void setColour(int8_t edge);  // turns off LEDs from (start to edge)
-void getFilename(uint8_t hour, uint8_t minute, uint8_t second);
-void getDirectory(uint8_t day, uint8_t month, uint8_t year);
-void setColour(int8_t edge);
-void sdSend();
-void buffPush(int id, float tempData); // Overloaded function to push data to the saving buffer with float data
-void buffPush(int id, unsigned long tempData); // Overloaded function to push data to the saving buffer with unsigned long data
-void strainData();
-void imuData();
-void susData();
-void dateTime();
+void incrementHall_FR();
+void incrementHall_FL();
+void incrementHall_SEC();
+void incrementHall_PRIM();
 
-void dateTime(uint16_t* date, uint16_t* time) {
-
-  uint16_t year;
-  uint8_t month, day, hour, minute, second;
-  // User gets date and time from GPS or real-time clock here
-  if (GPS.fix) {
-    year = GPS_year;
-    month = GPS_month;
-    day = GPS_day;
-    hour = GPS_hour;
-    minute = GPS_minute;
-    second = GPS_seconds;
-  } else {
-    year = 2030;
-    month = 3;
-    day = 1;
-    hour = 13;
-    minute = 2;
-    second = 50;
-  }
-  // Return date using FAT_DATE macro to format fields
-  *date = FAT_DATE(year, month, day);
-  // Return time using FAT_TIME macro to format fields
-  *time = FAT_TIME(hour, minute, second);
+void incrementHall_FR() {
+  //Serial.println("Front Right RPM Pin Hit");
+  FR_hall_count += 1;
+}
+void incrementHall_FL() {
+  //Serial.println("Front Left RPM Pin Hit");
+  FL_hall_count += 1;
+}
+void incrementHall_SEC() {
+  //Serial.println("Secondary RPM Pin Hit");
+  SEC_hall_count += 1;
 }
 
-void getFilename(uint8_t hour, uint8_t minute, uint8_t second) {
-  // Only hour, minute and second are saved in UTC time
-  // Please move files before start of new day
-  sprintf(filename, "/%02d%02d%02d.bin", (hour, minute, second));
-}
-
-void getDirectory(uint8_t day, uint8_t month, uint8_t year) {
-  // Please move files before start of new day
-  sprintf(directory, "/%02d-%02d-%02d", year, month, day);
-}
-
-void setColour(int8_t edge) {
-  // Set all setColour to off/0
-  strip.clear();
-
-  const uint8_t R[10] = { 255, 255, 255, 255, 255, 255, 100, 0, 0, 75 };
-  const uint8_t G[10] = { 0, 80, 150, 200, 200, 235, 255, 255, 0, 0 };
-  const uint8_t B[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 };
-
-  // Set pixel colour up to strip[edge]
-  for (uint8_t i = 0; i <= edge; i++) {
-    strip.setPixelColor(i, strip.Color(R[i], G[i], B[i]));
-  }
-  strip.setPixelColor(9, strip.Color(butColour[HUD_SHOW][0], butColour[HUD_SHOW][1], butColour[HUD_SHOW][2]));
-}
-
-void sdSend() {
-  if (gps_active) {
-    // Swap the saving and processing buffers
-    if (savingBuff == &buff1) {
-      savingBuff = &buff2;
-      sdBuff = &buff1;
-    } else if (savingBuff == &buff2) {
-      savingBuff = &buff1;
-      sdBuff = &buff2;
-    }
-    // Toggle the status LED
-    statusLED = !statusLED;
-    digitalWrite(STATUS_PIN, statusLED);
-    // Temporary array to hold data for writing to SD
-    dataStruct sdTemp[8];
-    int counter = 0;
-    unsigned long str = millis();
-    // Process the data from the sdBuff while its not empty
-    while (!(*sdBuff).isEmpty()) {
-      if (millis() > (str + 100)) {
-        Serial.println("SD LONG BOI");
-        break;
-      }
-      // Pop the data from the sdBuff and push it to the sdTemp array
-      (*sdBuff).pop(sdTemp[counter]);
-      // If the counter is 7, write the data to the SD card
-      if (counter >= 7) {
-        bajaData.write((uint8_t*)&sdTemp, sizeof(sdTemp));
-        counter = -1;
-      }
-      counter++;
-    }
-    // Write the remaining data to the SD card
-    if (counter != 0 && millis() <= (str + 100)) {
-      bajaData.write((uint8_t*)&sdTemp, sizeof(sdTemp));
-    }
-    // Flush the data to the SD card
-    bajaData.flush(); 
-  }
-}
-
-// Function to push data to the saving buffer with float data
-void buffPush(int id, float tempData) {
-  if (!USE_SD && EN_SEROUT) {
-    Serial.print("FL* ID: " + String(DataTypeNames[id]) + " Data: " + String(tempData, 4));
-    return;
-  }
-  // Set the timestamp and type for the data
-  temp.timeStamp_typ = (millis() << 6) | id;
-  temp.data_float = tempData;
-  // Check if the GPS is active and push the data to the saving buffer
-  if (gps_active && !(*savingBuff).push(temp)) {
-    Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
-  }
-}
-
-// Function to push data to the saving buffer with unsigned long data
-void buffPush(int id, unsigned long tempData) {
-  // Check if the SD card is not being used and the serial output is enabled
-  if (!USE_SD && EN_SEROUT) {
-    Serial.println("UL* ID: " + String(DataTypeNames[id]) + " Data: " + String(tempData));
-    return;
-  }
-  // Set the timestamp and type for the data
-  temp.timeStamp_typ = (millis() << 6) | id;
-  temp.data_long = tempData;
-  // Check if the GPS is active and push the data to the saving buffer
-  if (gps_active && !(*savingBuff).push(temp)) {
-    Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
-  }
-}
-
-void strainData(int offset) {
-  strain[offset] = analogRead(strainPin[offset]);
-  buffPush(STRAIN1+offset, (unsigned long)(strain[offset]));
-}
-
-void susData1() { // Front Left
-  sus1 = analogRead(susPin[0]);
-  //  Serial.print("susdata1: ");
-  //  Serial.print(sus1);
-  buffPush(SUS_TRAV_FR, (unsigned long)(sus1));
-}
-
-void susData2() { // Front Right
-  sus2 = analogRead(susPin[1]);
-  //  Serial.print(" susdata2: ");
-  //  Serial.println(sus2);
-  buffPush(SUS_TRAV_FL, (unsigned long)(sus2)); 
-}
-
-void susData3() { // Rear Right
-  sus3 = analogRead(susPin[2]);
-  //  Serial.print("susdata3: ");
-  //  Serial.println(sus3);
-  buffPush(SUS_TRAV_RR, (unsigned long)(sus3));
-}
-
-void susData4() { // This is the data for the steering column
-  sus4 = analogRead(susPin[3]);
-  //  Serial.print("susdata4: ");
-  //  Serial.println(sus4);
-  //  buffPush(STRAIN6, (unsigned long)(sus4));
+void incrementHall_PRIM() {
+  //Serial.println("PRIM RPM Pin Hit");
+  PRIM_hall_count += 1;
 }
 
 void tempData() {
@@ -177,52 +37,6 @@ void tempData() {
   //  Serial.print("primtemp: ");
   //  Serial.println(temperature);
   buffPush(PRIM_TEMP, (unsigned long)(temperature));
-}
-
-void imuData() {
-  // Retrieve the latest IMU event data
-  bno.getEvent(&event);
-
-  // Initialize the variables for the IMU data
-  uint8_t system_cal, gyro_cal, accel_cal, mag_cal;
-  system_cal = gyro_cal = accel_cal = mag_cal = 0;
-
-  bno.getCalibration(&system_cal, &gyro_cal, &accel_cal, &mag_cal);
-
-  // Get the accelerometer, gyro, and gravity vectors
-  accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
-  gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
-  gravity = bno.getVector(Adafruit_BNO055::VECTOR_GRAVITY);
-
-  // Check if the IMU is calibrated
-  if (system_cal > 0) {
-    // Push the orientation data to the buffer
-    buffPush(IMU_ABS_X, ((float)event.orientation.x));
-    buffPush(IMU_ABS_Y, ((float)event.orientation.y));
-    buffPush(IMU_ABS_Z, ((float)event.orientation.z));
-    // Push the temperature data to the buffer
-    buffPush(IMU_TEMP, (unsigned long)bno.getTemp());
-  }
-
-  // Check if the accelerometer is calibrated
-  if (accel_cal > 0) {
-    // Push the accelerometer data to the buffer
-    buffPush(IMU_ACCEL_X, float(accel.x()));
-    buffPush(IMU_ACCEL_Y, float(accel.y()));
-    buffPush(IMU_ACCEL_Z, float(accel.z()));
-    // Push the gravity data to the buffer
-    buffPush(IMU_GRAVITY_X, float(gravity.x()));
-    buffPush(IMU_GRAVITY_Y, float(gravity.y()));
-    buffPush(IMU_GRAVITY_Z, float(gravity.z()));
-  }
-
-  // Check if the gyro is calibrated
-  if (gyro_cal > 0) {
-    // Push the gyro data to the buffer
-    buffPush(IMU_GYRO_X, float(gyro.x()));
-    buffPush(IMU_GYRO_Y, float(gyro.y()));
-    buffPush(IMU_GYRO_Z, float(gyro.z()));
-  }
 }
 
 void setup() {
@@ -243,10 +57,10 @@ void setup() {
   pinMode(PRIM_HALL_PIN, INPUT_PULLUP);
 
   // Attach the interrupts to hall sensors to count rising edges
-  attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), FR_hall_count += 1, RISING);
-  attachInterrupt(digitalPinToInterrupt(FL_HALL_PIN), FL_hall_count += 1, RISING);
-  attachInterrupt(digitalPinToInterrupt(SEC_HALL_PIN), SEC_hall_count += 1, RISING);
-  attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), PRIM_hall_count += 1, RISING);
+  attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, RISING);
+  attachInterrupt(digitalPinToInterrupt(FL_HALL_PIN), incrementHall_FL, RISING);
+  attachInterrupt(digitalPinToInterrupt(SEC_HALL_PIN), incrementHall_SEC, RISING);
+  attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), incrementHall_PRIM, RISING);
 
   // Set up status pin as output
   pinMode(STATUS_PIN, OUTPUT);
@@ -580,6 +394,7 @@ void loop(){
   if (EN_GPS && gps_timesend && gps_goodmessage && GPS.fix) {
 
     buffPush(GPS_LATITUDE, GPS.latitude);
+    // buffPush(GPS_LAT, (unsigned long)GPS.lat);
     buffPush(GPS_LAT, (unsigned long)GPS.lat);
 
     buffPush(GPS_LONGITUTE, GPS.longitude);
