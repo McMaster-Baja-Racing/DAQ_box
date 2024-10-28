@@ -44,5 +44,9 @@ String DataTypeNames[]={
   "BATT_PERC",
   "BATT_VOLT",
   "BRAKE_PRESS",
+  "IMU_QUAT_W",
+  "IMU_QUAT_X",
+  "IMU_QUAT_Y",
+  "IMU_QUAT_Z",
   "DATATYPE_COUNT"
 };

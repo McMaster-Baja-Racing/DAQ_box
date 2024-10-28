@@ -25,13 +25,15 @@ void imuData() {
   accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
   gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
   gravity = bno.getVector(Adafruit_BNO055::VECTOR_GRAVITY);
+  imu::Quaternion quat = bno.getQuat();
 
   // Check if the IMU is calibrated
   if (system_cal > 0) {
     // Push the orientation data to the buffer
-    buffPush(IMU_ABS_X, ((float)event.orientation.x));
-    buffPush(IMU_ABS_Y, ((float)event.orientation.y));
-    buffPush(IMU_ABS_Z, ((float)event.orientation.z));
+    buffPush(IMU_QUAT_W, (float)quat.w());
+    buffPush(IMU_QUAT_X, (float)quat.x());
+    buffPush(IMU_QUAT_Y, (float)quat.y());
+    buffPush(IMU_QUAT_Z, (float)quat.z());
     // Push the temperature data to the buffer
     buffPush(IMU_TEMP, (unsigned long)bno.getTemp());
   }
