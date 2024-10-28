@@ -1,5 +1,15 @@
-#include "IMUHeader.h"
-#include "../GlobalVars.h"
+#include "imu.h"
+#include <cstdint>
+#include <Adafruit_BNO055.h>
+#include "sd.h"
+#include "datastruct.h"
+
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+
+imu::Vector<3> accel;
+imu::Vector<3> gyro;
+imu::Vector<3> gravity;
+sensors_event_t event;
 
 void imuData() {
   // Retrieve the latest IMU event data

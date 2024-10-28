@@ -1,16 +1,9 @@
-#include "GPSHeader.h"
-#include "GlobalVars.h"
-#include "TimeLib.h"
+#include "datetime.h"
+#include <cstdio>
+#include <SD.h>
+#include <Adafruit_GPS.h>
 
-// Define the GPS object
-Adafruit_GPS GPS(&GPSSerial);
-
-// Define the global variables
-bool use_gps = false;
-bool gps_flash = true;
-bool gps_timesend = false;
-bool gps_goodmessage = false;
-bool gps_active = false;
+Adafruit_GPS GPS = Adafruit_GPS(&GPSSerial);
 
 uint16_t GPS_year = 2023;
 uint8_t GPS_month = 1;
@@ -18,8 +11,6 @@ uint8_t GPS_day = 1;
 uint8_t GPS_hour = 1; 
 uint8_t GPS_minute = 30; 
 uint8_t GPS_seconds = 25;
-
-float gps_speed = 0;
 
 void dateTime(uint16_t* date, uint16_t* time) {
 

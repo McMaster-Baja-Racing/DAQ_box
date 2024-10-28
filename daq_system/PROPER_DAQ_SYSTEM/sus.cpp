@@ -1,5 +1,12 @@
-#include "SUSHeader.h"
-#include "../GlobalVars.h"
+#include "sus.h"
+#include "sd.h"
+#include "datastruct.h"
+
+/***  Suspension Travel Data  ***/ 
+int sus1;
+int sus2;
+int sus3;
+int sus4;
 
 void susData1() { // Front Left
   sus1 = analogRead(susPin[0]);
