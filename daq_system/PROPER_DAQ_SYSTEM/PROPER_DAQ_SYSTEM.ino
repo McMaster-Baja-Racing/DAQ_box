@@ -14,6 +14,8 @@
 void setup() {
   // Intialize the serial communication
   Serial.begin(115200);
+
+
   Serial.println("Setup Starting");
 
   // Set up LED Strip
