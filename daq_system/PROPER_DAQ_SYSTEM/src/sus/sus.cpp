@@ -1,6 +1,6 @@
 #include "sus.h"
-#include "sd.h"
-#include "datastruct.h"
+#include "../sd/sd.h"
+#include "../datastruct/datastruct.h"
 
 /***  Suspension Travel Data  ***/ 
 int sus1;

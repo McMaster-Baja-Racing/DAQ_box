@@ -1,8 +1,8 @@
 #include "imu.h"
 #include <cstdint>
 #include <Adafruit_BNO055.h>
-#include "sd.h"
-#include "datastruct.h"
+#include "../datastruct/datastruct.h"
+#include "../sd/sd.h"
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 

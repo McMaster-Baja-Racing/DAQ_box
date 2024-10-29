@@ -1,6 +1,6 @@
 #include "temp.h"
-#include "datastruct.h"
-#include "sd.h"
+#include "../sd/sd.h"
+#include "../datastruct/datastruct.h"
 
 int temperature;
 

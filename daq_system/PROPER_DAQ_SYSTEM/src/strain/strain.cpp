@@ -1,6 +1,6 @@
 #include "strain.h"
-#include "sd.h"
-#include "datastruct.h"
+#include "../sd/sd.h"
+#include "../datastruct/datastruct.h"
 
 int strain [6];
 

@@ -1,6 +1,6 @@
 #include "sd.h"
 #include <cstdint>
-#include "dataTypeNames.h"
+#include "../datastruct/dataTypeNames.h"
 
 bool gps_active = false;
 bool statusLED = 0;

@@ -1,20 +1,19 @@
 #include "daq_system_Teensy4.h"
-#include "datastruct.h"
+#include "src/datastruct/datastruct.h"
 #include "TimeLib.h"
-#include "test.h"
-#include "datetime.h"
-#include "hud.h"
-#include "sd.h"
-#include "imu.h"
-#include "sus.h"
-#include "strain.h"
-#include "inc.h"
-#include "temp.h"
+#include "src/test/test.h"
+#include "src/datetime/datetime.h"
+#include "src/hud/hud.h"
+#include "src/sd/sd.h"
+#include "src/imu/imu.h"
+#include "src/sus/sus.h"
+#include "src/strain/strain.h"
+#include "src/inc/inc.h"
+#include "src/temp/temp.h"
 
 void setup() {
   // Intialize the serial communication
   Serial.begin(115200);
-
 
   Serial.println("Setup Starting");
 
