@@ -1,9 +1,11 @@
-#include "temp.h"
-#include "../sd/sd.h"
-#include "../datastruct/datastruct.h"
+#include "temperature.h"
+#include "../sdCard/sdCard.h"
+#include "../datastruct/dataTypes.h"
 
+// Initializations
 int temperature;
 
+// Function Definitions
 void tempData() {
   temperature = (analogRead(TEMPERATURE_PIN))/*/2*/;
   //  Serial.print("primtemp: ");

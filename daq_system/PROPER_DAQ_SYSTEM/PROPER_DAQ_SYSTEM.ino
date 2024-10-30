@@ -1,18 +1,18 @@
-#include "daq_system_Teensy4.h"
-#include "src/datastruct/datastruct.h"
 #include "TimeLib.h"
-#include "src/test/test.h"
-#include "src/datetime/datetime.h"
+#include "daq_system_Teensy4.h"
+#include "src/datastruct/dataTypes.h"
+#include "src/fileStuff/file.h"
+#include "src/datetime/dateTime.h"
 #include "src/hud/hud.h"
-#include "src/sd/sd.h"
+#include "src/sdCard/sdCard.h"
 #include "src/imu/imu.h"
-#include "src/sus/sus.h"
-#include "src/strain/strain.h"
-#include "src/inc/inc.h"
-#include "src/temp/temp.h"
+#include "src/suspensionData/sus.h"
+#include "src/strainData/strain.h"
+#include "src/counters/counters.h"
+#include "src/temperature/temperature.h"
 
 void setup() {
-  // Intialize the serial communication
+
   Serial.begin(115200);
 
   Serial.println("Setup Starting");
@@ -23,7 +23,6 @@ void setup() {
   strip.setBrightness(BRIGHTNESS);
   delay(50);
 
-  // Configure the hall sensors pins 
   pinMode(FR_HALL_PIN, INPUT_PULLUP);
   pinMode(FR_HALL_PIN, INPUT_PULLUP);
   pinMode(SEC_HALL_PIN, INPUT_PULLUP);
@@ -35,7 +34,6 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(SEC_HALL_PIN), incrementHall_SEC, RISING);
   attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), incrementHall_PRIM, RISING);
 
-  // Set up status pin as output
   pinMode(STATUS_PIN, OUTPUT);
 
   delay(1000);
@@ -55,13 +53,13 @@ void setup() {
 
   // SD Card Setup
   if (USE_SD) {
-    // Attempt to initialize the SD card
+ 
     if (!SD.begin(chipSelect)) {
       // If the SD card fails to initialize, set the status LED to red
       Serial.println("Card failed, or not present");
       strip.setPixelColor(1, strip.Color(255, 0, 0));
       strip.show();
-      USE_SD = false; // Disable SD card usage
+      USE_SD = false;
     } else {
       // If the SD card initializes successfully, set the status LED to green
       SdFile::dateTimeCallback(dateTime);
@@ -84,7 +82,7 @@ void setup() {
     Serial.println("GPS SUCCESS");
   }
   strip.show();
-  // Congfigure the GPS settings
+
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY); // Minimum recommended data
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 10 Hz update rate
 
@@ -149,7 +147,6 @@ void loop(){
 
   inputButton.update();
 
-  //Check if the button is pressed
   if (inputButton.fallingEdge()) {
     Serial.print("Button Pressed: ");
 
@@ -158,7 +155,7 @@ void loop(){
       Serial.print(" Mode = "); 
       Serial.print(HUD_SHOW);
     } else {
-      // If the button was presed within the last 250ms
+
       if (millis() - lastPressed < 250) {
         Serial.println("Start recording"); 
         EN_GPS = false;
@@ -185,8 +182,7 @@ void loop(){
         // bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time, Primary Temp i2c, Secondary Temp i2c, Suspension Travel, Strain, FR_RPM, SEC_RPM,Battery Percentage, Battery Voltage");
         
         gps_flash = true;
-
-        // Set the LED strip to green
+        
         for (int i = 0; i < LED_COUNT; i++) {
           strip.setPixelColor(i, strip.Color(0, 255, 0));
         }

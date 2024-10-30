@@ -39,7 +39,6 @@ bool EN_SUS2 = true;
 bool EN_SUS3 = true;
 bool EN_SUS4 = true;
 
-
 /***  HUD  ***/
 #define LED_COUNT  10  // 2 x 5 LED strip
 #define BRIGHTNESS  50  // Max brightness = 255
@@ -47,7 +46,6 @@ bool EN_SUS4 = true;
 int brake_pres = 0.0;
 
 /***  General  ***/
-
 // Interval between each data collection point, this is where you set data logging rate
 // These values are in ms not hz
 
@@ -156,4 +154,3 @@ int lastPressed = 0;
 // https://www.arduino.cc/en/Reference/SDCardNotes
 char fileDir [23];
 const int chipSelect = BUILTIN_SDCARD;
-

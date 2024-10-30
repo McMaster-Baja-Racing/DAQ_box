@@ -1,5 +1,6 @@
 #include "../../RingBuff.h"
 
+// Declarations
 enum DataType
 {
   IMU_ABS_X,

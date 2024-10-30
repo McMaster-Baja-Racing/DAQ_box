@@ -1,13 +1,10 @@
 #include <cstdint>
 #include <Adafruit_NeoPixel.h>
 
-extern Adafruit_NeoPixel strip;
-
-#define LED_COUNT  10  // 2 x 5 LED strip
-#define BRIGHTNESS  50  // Max brightness = 255
+// Definitions
+#define LED_COUNT 10  // 2 x 5 LED strip
+#define BRIGHTNESS 50  // Max brightness = 255
 #define HUD_PIN 9  // Digital Pin 6 for HUD LED's
-
-extern int HUD_SHOW;
 
 enum HUD {
   PRIM,
@@ -21,6 +18,7 @@ enum HUD {
   HUD_MODES
 };
 
+// Constants
 const int butColour[][3] = {
   {255, 0, 0},      // Red = prim
   {0, 255, 0},      // Green = sec
@@ -36,4 +34,9 @@ const uint8_t R[10] = { 255, 255, 255, 255, 255, 255, 100, 0, 0, 75 };
 const uint8_t G[10] = { 0, 80, 150, 200, 200, 235, 255, 255, 0, 0 };
 const uint8_t B[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 };
 
+// Declarations
+extern Adafruit_NeoPixel strip;
+extern int HUD_SHOW;
+
+// Function Declarations
 void setColour(int8_t edge);

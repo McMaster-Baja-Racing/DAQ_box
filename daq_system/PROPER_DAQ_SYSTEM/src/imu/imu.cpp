@@ -1,8 +1,10 @@
 #include "imu.h"
 #include <cstdint>
 #include <Adafruit_BNO055.h>
-#include "../datastruct/datastruct.h"
-#include "../sd/sd.h"
+#include "../datastruct/dataTypes.h"
+#include "../sdCard/sdCard.h"
+
+// Initializations
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
@@ -11,48 +13,43 @@ imu::Vector<3> gyro;
 imu::Vector<3> gravity;
 sensors_event_t event;
 
+// Function Definitions
 void imuData() {
-  // Retrieve the latest IMU event data
   bno.getEvent(&event);
 
-  // Initialize the variables for the IMU data
   uint8_t system_cal, gyro_cal, accel_cal, mag_cal;
   system_cal = gyro_cal = accel_cal = mag_cal = 0;
 
   bno.getCalibration(&system_cal, &gyro_cal, &accel_cal, &mag_cal);
 
-  // Get the accelerometer, gyro, and gravity vectors
   accel = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
   gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
   gravity = bno.getVector(Adafruit_BNO055::VECTOR_GRAVITY);
   imu::Quaternion quat = bno.getQuat();
 
-  // Check if the IMU is calibrated
   if (system_cal > 0) {
-    // Push the orientation data to the buffer
+
     buffPush(IMU_QUAT_W, (float)quat.w());
     buffPush(IMU_QUAT_X, (float)quat.x());
     buffPush(IMU_QUAT_Y, (float)quat.y());
     buffPush(IMU_QUAT_Z, (float)quat.z());
-    // Push the temperature data to the buffer
+  
     buffPush(IMU_TEMP, (unsigned long)bno.getTemp());
   }
 
-  // Check if the accelerometer is calibrated
   if (accel_cal > 0) {
-    // Push the accelerometer data to the buffer
+  
     buffPush(IMU_ACCEL_X, float(accel.x()));
     buffPush(IMU_ACCEL_Y, float(accel.y()));
     buffPush(IMU_ACCEL_Z, float(accel.z()));
-    // Push the gravity data to the buffer
+  
     buffPush(IMU_GRAVITY_X, float(gravity.x()));
     buffPush(IMU_GRAVITY_Y, float(gravity.y()));
     buffPush(IMU_GRAVITY_Z, float(gravity.z()));
   }
 
-  // Check if the gyro is calibrated
   if (gyro_cal > 0) {
-    // Push the gyro data to the buffer
+ 
     buffPush(IMU_GYRO_X, float(gyro.x()));
     buffPush(IMU_GYRO_Y, float(gyro.y()));
     buffPush(IMU_GYRO_Z, float(gyro.z()));

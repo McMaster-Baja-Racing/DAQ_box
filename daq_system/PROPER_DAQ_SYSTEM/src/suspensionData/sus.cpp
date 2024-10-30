@@ -1,13 +1,14 @@
 #include "sus.h"
-#include "../sd/sd.h"
-#include "../datastruct/datastruct.h"
+#include "../sdCard/sdCard.h"
+#include "../datastruct/dataTypes.h"
 
-/***  Suspension Travel Data  ***/ 
+// Initializations
 int sus1;
 int sus2;
 int sus3;
 int sus4;
 
+// Function Definitions
 void susData1() { // Front Left
   sus1 = analogRead(susPin[0]);
   //  Serial.print("susdata1: ");
