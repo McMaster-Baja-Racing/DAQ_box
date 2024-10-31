@@ -202,8 +202,10 @@ void tempData() {
   //temperature = (analogRead(TEMPERATURE_PIN))/*/2*/;
   //Serial.print("primtemp: ");
   //Serial.println(temperature);
-  temperature = mcp.readThermocouple();
-  buffPush(PRIM_TEMP, (unsigned long)(temperature));
+  if(mcp_initialized) {
+    temperature = mcp.readThermocouple();
+    buffPush(PRIM_TEMP, (unsigned long)(temperature));
+  }
 }
 
 void imuData() {
@@ -299,9 +301,11 @@ void setup() {
   // Set up thermocouple
   if (!mcp.begin(0x67)) {
     Serial.println("MCP9600 failed, or not present");
+    mcp_initialized = false;
   } else {
     mcp.setThermocoupleType(MCP9600_TYPE_K);
     Serial.println("MCP9600 K-TYPE SUCCESS");
+    mcp_initialized = true;
   }
 
   // Set up GPS

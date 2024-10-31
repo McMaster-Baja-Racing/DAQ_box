@@ -202,6 +202,7 @@ int sus3;
 int sus4;
 
 //temperature data
+bool mcp_initialized = false;
 float temperature;
 
 //Status LED that is connected to the outside of the box
