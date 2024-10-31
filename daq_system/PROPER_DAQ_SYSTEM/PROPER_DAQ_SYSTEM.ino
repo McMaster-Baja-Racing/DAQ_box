@@ -199,10 +199,13 @@ void susData4() { // This is the data for the steering column
 }
 
 void tempData() {
-  temperature = (analogRead(TEMPERATURE_PIN))/*/2*/;
+  //temperature = (analogRead(TEMPERATURE_PIN))/*/2*/;
   //Serial.print("primtemp: ");
   //Serial.println(temperature);
-  buffPush(PRIM_TEMP, (unsigned long)(temperature));
+  if(mcp_initialized) {
+    temperature = mcp.readThermocouple();
+    buffPush(PRIM_TEMP, (unsigned long)(temperature));
+  }
 }
 
 void imuData() {
@@ -295,6 +298,15 @@ void setup() {
     delay(500);
   }
 
+  // Set up thermocouple
+  if (!mcp.begin(0x67)) {
+    Serial.println("MCP9600 failed, or not present");
+    mcp_initialized = false;
+  } else {
+    mcp.setThermocoupleType(MCP9600_TYPE_K);
+    Serial.println("MCP9600 K-TYPE SUCCESS");
+    mcp_initialized = true;
+  }
 
   // Set up GPS
   if (!GPS.begin(9600)) {
@@ -312,8 +324,6 @@ void setup() {
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 10 Hz update rate
   Serial.println("Setup Finished");
   digitalWrite(STATUS_PIN, LOW);
-
-
 
   delay(1000);
 }
@@ -366,6 +376,11 @@ void loop(){
 //  Serial.print("Temp (C): ");
 //  Serial.println(temperature);
 //  delay(100);
+
+//  float hotTemp = mcp.readThermocouple();
+//  Serial.print("Thermocouple Temperature: ");
+//  Serial.print(hotTemp);
+//  Serial.println(" C");
 
   inputButton.update();
   if (inputButton.fallingEdge()) {

@@ -13,6 +13,7 @@
 #include <SD.h>
 //FOr Temp Sensors
 //#include "Adafruit_MCP9808.h"
+#include <Adafruit_MCP9600.h>
 // For Push`s
 #include <Bounce.h>
 
@@ -120,6 +121,7 @@ int susPin[] = {24,25,26,27};
 Adafruit_GPS GPS(&GPSSerial);
 Adafruit_NeoPixel strip(LED_COUNT, HUD_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+Adafruit_MCP9600 mcp;
 
 //Timers
 unsigned long battTimer = millis();
@@ -200,7 +202,8 @@ int sus3;
 int sus4;
 
 //temperature data
-int temperature;
+bool mcp_initialized = false;
+float temperature;
 
 //Status LED that is connected to the outside of the box
 bool statusLED=0;
