@@ -296,6 +296,13 @@ void setup() {
     delay(500);
   }
 
+  // Set up thermocouple
+  if (!mcp.begin(0x67)) {
+    Serial.println("MCP9600 failed, or not present");
+  } else {
+    mcp.setThermocoupleType(MCP9600_TYPE_K);
+    Serial.println("MCP9600 K-TYPE SUCCESS");
+  }
 
   // Set up GPS
   if (!GPS.begin(9600)) {
@@ -313,14 +320,6 @@ void setup() {
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 10 Hz update rate
   Serial.println("Setup Finished");
   digitalWrite(STATUS_PIN, LOW);
-
-  // Set up thermocouple
-  if (!mcp.begin(0x67)) {
-    Serial.println("MCP9600 failed, or not present");
-  } else {
-    mcp.setThermocoupleType(MCP9600_TYPE_K);
-    Serial.println("MCP9600 K-TYPE SUCCESS");
-  }
 
   delay(1000);
 }
