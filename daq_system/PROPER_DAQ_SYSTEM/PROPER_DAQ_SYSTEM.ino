@@ -199,9 +199,10 @@ void susData4() { // This is the data for the steering column
 }
 
 void tempData() {
-  temperature = (analogRead(TEMPERATURE_PIN))/*/2*/;
+  //temperature = (analogRead(TEMPERATURE_PIN))/*/2*/;
   //Serial.print("primtemp: ");
   //Serial.println(temperature);
+  temperature = mcp.readThermocouple();
   buffPush(PRIM_TEMP, (unsigned long)(temperature));
 }
 
@@ -313,7 +314,13 @@ void setup() {
   Serial.println("Setup Finished");
   digitalWrite(STATUS_PIN, LOW);
 
-
+  // Set up thermocouple
+  if (!mcp.begin(0x67)) {
+    Serial.println("MCP9600 failed, or not present");
+  } else {
+    mcp.setThermocoupleType(MCP9600_TYPE_K);
+    Serial.println("MCP9600 K-TYPE SUCCESS");
+  }
 
   delay(1000);
 }
