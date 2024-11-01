@@ -129,7 +129,7 @@ void sdSend() {
 }
 
 void buffPush(int id, float tempData) {
-  if (!USE_SD && EN_SEROUT) {
+  if ( (!USE_SD && EN_SEROUT)) {
     Serial.print("FL* ID: ");
     Serial.print(DataTypeNames[id]);
     Serial.print(" Data: ");
@@ -207,7 +207,7 @@ void tempData() {
     buffPush(PRIM_TEMP, (unsigned long)(temperature));
   }
 }
-
+int lastSystemCall = 0;
 void imuData() {
   bno.getEvent(&event);
   uint8_t system_cal, gyro_cal, accel_cal, mag_cal;
@@ -219,6 +219,25 @@ void imuData() {
   gravity = bno.getVector(Adafruit_BNO055::VECTOR_GRAVITY);
   imu::Quaternion quat = bno.getQuat();
 
+  // Serial.print("w: ");
+  // Serial.print((float)quat.w());
+  // Serial.print("x: ");
+  // Serial.print((float)quat.x());
+  // Serial.print(", y: ");
+  // Serial.print((float)quat.y());
+  // Serial.print(", z: ");
+  // Serial.println((float)quat.z());
+  // delay(100);
+
+  if (lastSystemCall == 0 && system_cal > 0) {
+    Serial.println("Calibrated");
+  } else if (system_cal == 0 && lastSystemCall > 0) {
+    Serial.println("Uncalibrated");
+  }
+
+  lastSystemCall = system_cal;
+
+  
 
   if (system_cal > 0) {
     buffPush(IMU_QUAT_W, (float)quat.w());
@@ -237,6 +256,8 @@ void imuData() {
     buffPush(IMU_GRAVITY_Z, float(gravity.z()));
   }
   if (gyro_cal > 0) {
+    
+
     buffPush(IMU_GYRO_X, float(gyro.x()));
     buffPush(IMU_GYRO_Y, float(gyro.y()));
     buffPush(IMU_GYRO_Z, float(gyro.z()));
@@ -328,7 +349,8 @@ void setup() {
   delay(1000);
 }
 
-void loop(){
+void loop() {
+
   //CALRATION UNCOMMENT THIS LINE AND CHANGE TO YOUR VARIABLE
 //  Serial.print("Brake pressue (Psi): ");
 //  Serial.println(brake_pres);
