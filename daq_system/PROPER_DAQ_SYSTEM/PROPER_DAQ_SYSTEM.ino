@@ -70,6 +70,9 @@ void setup() {
     delay(500);
   }
 
+  // Set up Temperature Sensor
+  tempSetup();
+
   // Set up GPS
   if (!GPS.begin(9600)) {
     strip.setPixelColor(2, strip.Color(255, 0, 0));
@@ -142,6 +145,11 @@ void loop(){
   Serial.println(temperature);
   delay(100);
   */
+
+//  float hotTemp = mcp.readThermocouple();
+//  Serial.print("Thermocouple Temperature: ");
+//  Serial.print(hotTemp);
+//  Serial.println(" C");
 
   inputButton.update();
 

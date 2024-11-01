@@ -16,9 +16,6 @@
 #include <SPI.h>
 #include <SD.h>
 
-//For Temp Sensors
-//#include "Adafruit_MCP9808.h"
-
 // For Push`s
 #include <Bounce.h>
 
@@ -73,14 +70,12 @@ int brake_pres = 0.0;
 #define SEC_HALL_PIN 4
 #define PRIM_HALL_PIN 5
 #define BUTT_PIN 29
-/***  GPS  ***/ 
 
 /***********************************/
 /***  Start of Global variables  ***/
 /***********************************/
 
-/***  Object Definitions  ***/
-/***  Timers  ***/ 
+//Timers
 unsigned long battTimer = millis();
 unsigned long tempTimer = millis();
 unsigned long ledTimer = millis();
