@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <SPI.h>
 #include <SD.h>
-#include "../../RingBuff.h"
+#include "RingBuff.h"
 
 // Definitions
 #define STATUS_PIN 28

@@ -1,4 +1,4 @@
-#include "../../RingBuff.h"
+#include <cstdint>
 
 // Declarations
 enum DataType

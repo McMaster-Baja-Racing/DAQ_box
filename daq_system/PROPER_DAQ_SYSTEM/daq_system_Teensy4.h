@@ -60,7 +60,7 @@ int brake_pres = 0.0;
 #define SUS_INTERVAL 5
 #define TEMP_INTERVAL 500
 
-/***  RMP Sensors  ***/
+/***  RPM Sensors  ***/
 
 // Threshold for how many magnets until an rpm is recorded, as this number increase noise reduces but data can be missed
 // In 2023 we came to the conclusion that noise is okay and we can filter the data very well in post using the s-golay filter
@@ -110,7 +110,7 @@ bool send_data = false;
 SdFs sd;
 FsFile file;
 
-/***  RMP & Speed  ***/ 
+/***  RPM & Speed  ***/ 
 unsigned long FR_start = micros();
 unsigned long FR_end_time = micros();
 unsigned long FR_past_time = micros();

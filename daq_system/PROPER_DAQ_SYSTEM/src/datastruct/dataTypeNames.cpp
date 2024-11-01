@@ -1,5 +1,4 @@
-#include "../../RingBuff.h"
-#include <cstdint>
+#include <Arduino.h>  
 #include "dataTypeNames.h"
 
 String DataTypeNames[]={

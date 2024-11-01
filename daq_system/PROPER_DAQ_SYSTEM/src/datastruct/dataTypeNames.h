@@ -1,4 +1,3 @@
-#include "../../RingBuff.h"
+#include <Arduino.h>  // For String in Arduino
 
-// Declarations
 extern String DataTypeNames[];

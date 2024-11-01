@@ -1,7 +1,7 @@
 #include "TimeLib.h"
 #include "daq_system_Teensy4.h"
 #include "src/datastruct/dataTypes.h"
-#include "src/fileStuff/file.h"
+#include "src/fileInformation/file.h"
 #include "src/datetime/dateTime.h"
 #include "src/hud/hud.h"
 #include "src/sdCard/sdCard.h"
@@ -38,13 +38,15 @@ void setup() {
 
   delay(1000);
 
+  // Setup section
+  // If the sensor fails to initialize, the status LED will be red
+  // If the sensor initializes successfully, the status LED will be green
+
   // Setup IMU
   if (!bno.begin()) {
-    // If the IMU fails to initialize, set the status LED to red
     Serial.println("BNO FAILURE");
     strip.setPixelColor(0, strip.Color(255, 0, 0));
   } else {
-    // If the IMU initializes successfully, set the status LED to green
     strip.setPixelColor(0, strip.Color(0, 255, 0));
     Serial.println("BNO SUCCESS");
   }
@@ -55,13 +57,11 @@ void setup() {
   if (USE_SD) {
  
     if (!SD.begin(chipSelect)) {
-      // If the SD card fails to initialize, set the status LED to red
       Serial.println("Card failed, or not present");
       strip.setPixelColor(1, strip.Color(255, 0, 0));
       strip.show();
       USE_SD = false;
     } else {
-      // If the SD card initializes successfully, set the status LED to green
       SdFile::dateTimeCallback(dateTime);
       Serial.println("CARD SUCCESS");
       strip.setPixelColor(1, strip.Color(0, 255, 0));
@@ -72,12 +72,10 @@ void setup() {
 
   // Set up GPS
   if (!GPS.begin(9600)) {
-    // If the GPS fails to initialize, set the status LED to red
     strip.setPixelColor(2, strip.Color(255, 0, 0));
     Serial.println("GPS failed, or not present");
     use_gps = false;
   } else {
-    // If the GPS initializes successfully, set the status LED to green
     strip.setPixelColor(2, strip.Color(0, 255, 0));
     Serial.println("GPS SUCCESS");
   }
@@ -161,17 +159,14 @@ void loop(){
         EN_GPS = false;
         gps_active = true;
 
-        // Create a directory for SD storage
         SD.mkdir(directory);
         Serial.println(filename);
         Serial.println(directory);
 
-        // Construct the file path for the SD card
         strcpy(fileDir, directory);
         strcat(fileDir, filename);
         Serial.println(fileDir);
 
-        // Open the file for writing
         bajaData = SD.open(fileDir, FILE_WRITE);
         if (bajaData == 0) {
           Serial.println("File failed to write");
@@ -256,7 +251,6 @@ void loop(){
     ledTimer = millis();
     if (gps_active) {
       int numLED = 0;
-      // Switch statement to determine which data to display on the LED strip
       switch (HUD_SHOW) {
         case PRIM:
           numLED = map(PRIM_rpm, 1700, 3800, -1, 8);
@@ -292,10 +286,9 @@ void loop(){
   }
 
   // Read data from the GPS in the 'main loop'
-  GPS.read();                   // c is raw gps data
-  if (GPS.newNMEAreceived()) {  // Interrupt signal for GPS signal
-    // Do not handle or output data in this section. Only store it.
-    // Me end up not listening and catching other sentences if we do output here
+  GPS.read();                 
+  if (GPS.newNMEAreceived()) {  
+   
 
     if (!GPS.parse(GPS.lastNMEA())) {  // this also sets the newNMEAreceived() flag to false
       gps_goodmessage = false;
