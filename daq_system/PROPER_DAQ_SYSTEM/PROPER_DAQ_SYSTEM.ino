@@ -146,10 +146,12 @@ void loop(){
   delay(100);
   */
 
-//  float hotTemp = mcp.readThermocouple();
-//  Serial.print("Thermocouple Temperature: ");
-//  Serial.print(hotTemp);
-//  Serial.println(" C");
+  if(mcp_initialized) {
+    float hotTemp = mcp.readThermocouple();
+    Serial.print("Thermocouple Temperature: ");
+    Serial.print(hotTemp);
+    Serial.println(" C");
+  }
 
   inputButton.update();
 
