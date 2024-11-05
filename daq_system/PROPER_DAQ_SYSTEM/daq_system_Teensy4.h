@@ -45,6 +45,7 @@ int brake_pres = 0.0;
 /***  General  ***/
 // Interval between each data collection point, this is where you set data logging rate
 // These values are in ms not hz
+//TO DO: Add comments explaining why interval values are set to what they are
 
 #define BATT_INTERVAL 10000
 #define IMU_INTERVAL 10
