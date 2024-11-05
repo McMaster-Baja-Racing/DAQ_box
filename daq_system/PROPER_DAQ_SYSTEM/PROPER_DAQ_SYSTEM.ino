@@ -71,7 +71,7 @@ void setup() {
   }
 
   // Set up Temperature Sensor
-  tempSetup();
+  //tempSetup();
 
   // Set up GPS
   if (!GPS.begin(9600)) {
