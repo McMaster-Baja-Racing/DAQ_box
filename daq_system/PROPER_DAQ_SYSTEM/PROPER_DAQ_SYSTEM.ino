@@ -10,6 +10,7 @@
 #include "src/strainData/strain.h"
 #include "src/counters/counters.h"
 #include "src/temperature/temperature.h"
+#include "src/RPM/rpm.h"
 
 void setup() {
 
@@ -203,41 +204,9 @@ void loop(){
     Serial.println();
   }
 
-  //-------------RPM----------------------
-  if (EN_RPM) {
-    if (SEC_hall_count > HALL_THRESH) {
-      SEC_end_time = micros();
-      SEC_past_time = (SEC_end_time - SEC_start);
-      if (SEC_stopped) {
-        SEC_stopped = false;
-      }
-      SEC_rpm = (SEC_hall_count / ((SEC_past_time / 1000000.0) / 60)) / SEC_counts_per_rotation;
-      buffPush(RPM_SEC, (float)SEC_rpm);
-      SEC_hall_count = 0;
-      SEC_start = micros();
-    }
-    if (!SEC_stopped && (micros() - SEC_start >= 1000000)) {
-      buffPush(RPM_SEC, float(0));
-      SEC_stopped = true;
-    }
+  //-------------RPM Check-------------------
 
-    if (PRIM_hall_count > HALL_THRESH) {
-      PRIM_end_time = micros();
-      PRIM_past_time = (PRIM_end_time - PRIM_start);
-      if (PRIM_stopped) {
-        PRIM_stopped = false;
-      }
-      PRIM_rpm = (PRIM_hall_count / ((PRIM_past_time / 1000000.0) / 60)) / Prim_counts_per_rotation;
-      buffPush(RPM_PRIM, (float)PRIM_rpm);
-      PRIM_hall_count = 0;
-      PRIM_start = micros();
-    }
-    if (!PRIM_stopped && (micros() - PRIM_start >= 1000000)) {
-      buffPush(RPM_PRIM, float(0));
-      PRIM_stopped = true;
-    }
-  }
-
+  rpmCalc();
 
   //-------------Battery Check---------------
   if (EN_BATT && millis() - battTimer > BATT_INTERVAL) {
@@ -298,8 +267,6 @@ void loop(){
   // Read data from the GPS in the 'main loop'
   GPS.read();                 
   if (GPS.newNMEAreceived()) {  
-   
-
     if (!GPS.parse(GPS.lastNMEA())) {  // this also sets the newNMEAreceived() flag to false
       gps_goodmessage = false;
     } else {
@@ -363,6 +330,7 @@ void loop(){
       strip.show();
     }
   }
+
   if (EN_GPS && gps_timesend && gps_goodmessage && GPS.fix) {
 
     buffPush(GPS_LATITUDE, GPS.latitude);
