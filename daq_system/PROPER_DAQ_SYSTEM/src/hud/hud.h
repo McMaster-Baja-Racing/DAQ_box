@@ -8,7 +8,7 @@
 
 enum HUD {
   PRIM,
-  SEC,
+  REAR_SPEED_HUD,
   BRAKE,
   GPS_S,
   BATT_PERCENT,
@@ -21,7 +21,7 @@ enum HUD {
 // Constants
 const int butColour[][3] = {
   {255, 0, 0},      // Red = prim
-  {0, 255, 0},      // Green = sec
+  {0, 255, 0},      // Green = Rear Wheel Speed
   {0, 0, 255},      // Blue = brake
   {255, 255, 255},  // White = spd
   {138, 43, 226},   // Purple = battery percent

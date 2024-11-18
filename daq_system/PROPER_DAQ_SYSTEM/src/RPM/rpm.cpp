@@ -3,39 +3,39 @@
 #include "../datastruct/dataTypes.h"
 #include "../sdCard/sdCard.h"
 float PRIM_hall_count = 0;
-float SEC_hall_count = 0;
+float REAR_SPEED_hall_count = 0;
 
 bool EN_RPM = true; 
-bool SEC_stopped = false;
+bool REAR_SPEED_stopped = false;
 bool PRIM_stopped = false;
 
-unsigned long SEC_start = micros();
-unsigned long SEC_end_time = micros();
-unsigned long SEC_past_time = micros();
+unsigned long REAR_SPEED_start = micros();
+unsigned long REAR_SPEED_end_time = micros();
+unsigned long REAR_SPEED_past_time = micros();
 
 unsigned long PRIM_start = micros();
 unsigned long PRIM_end_time = micros();
 unsigned long PRIM_past_time = micros();
 
-int SEC_rpm = 0;
+int REAR_SPEED_int = 0;
 int PRIM_rpm = 0;
 
 void rpmCalc() {
     if (EN_RPM) {
-    if (SEC_hall_count > HALL_THRESH) {
-      SEC_end_time = micros();
-      SEC_past_time = (SEC_end_time - SEC_start);
-      if (SEC_stopped) {
-        SEC_stopped = false;
+    if (REAR_SPEED_hall_count > HALL_THRESH) {
+      REAR_SPEED_end_time = micros();
+      REAR_SPEED_past_time = (REAR_SPEED_end_time - REAR_SPEED_start);
+      if (REAR_SPEED_stopped) {
+        REAR_SPEED_stopped = false;
       }
-      SEC_rpm = (SEC_hall_count / ((SEC_past_time / 1000000.0) / 60)) / SEC_counts_per_rotation;
-      buffPush(RPM_SEC, (float)SEC_rpm);
-      SEC_hall_count = 0;
-      SEC_start = micros();
+      REAR_SPEED_int = (REAR_SPEED_hall_count / ((REAR_SPEED_past_time / 1000000.0) / 60)) / Rear_speed_counts_per_rotation;
+      buffPush(REAR_SPEED, (float)REAR_SPEED_int);
+      REAR_SPEED_hall_count = 0;
+      REAR_SPEED_start = micros();
     }
-    if (!SEC_stopped && (micros() - SEC_start >= 1000000)) {
-      buffPush(RPM_SEC, float(0));
-      SEC_stopped = true;
+    if (!REAR_SPEED_stopped && (micros() - REAR_SPEED_start >= 1000000)) {
+      buffPush(REAR_SPEED, float(0));
+      REAR_SPEED_stopped = true;
     }
 
     if (PRIM_hall_count > HALL_THRESH) {
@@ -56,9 +56,9 @@ void rpmCalc() {
   }
 }
 
-void incrementHall_SEC() {
-  //Serial.println("Secondary RPM Pin Hit");
-  SEC_hall_count += 1;
+void incrementHall_REAR_SPEED() {
+  //Serial.println("Rear Wheel Speed Pin Hit");
+  REAR_SPEED_hall_count += 1;
 }
 
 void incrementHall_PRIM() {

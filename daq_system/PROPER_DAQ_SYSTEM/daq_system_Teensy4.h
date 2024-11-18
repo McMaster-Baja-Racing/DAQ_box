@@ -61,7 +61,7 @@ int brake_pres = 0.0;
 #define VOLT_PIN  14
 #define FR_HALL_PIN 2
 #define FL_HALL_PIN 3
-#define SEC_HALL_PIN 4
+#define REAR_SPEED_HALL_PIN 4
 #define PRIM_HALL_PIN 5
 #define BUTT_PIN 29
 

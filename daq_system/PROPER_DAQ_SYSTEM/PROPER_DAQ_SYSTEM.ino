@@ -25,14 +25,14 @@ void setup() {
   delay(50);
 
   pinMode(FR_HALL_PIN, INPUT_PULLUP);
-  pinMode(FR_HALL_PIN, INPUT_PULLUP);
-  pinMode(SEC_HALL_PIN, INPUT_PULLUP);
+  pinMode(FL_HALL_PIN, INPUT_PULLUP);
+  pinMode(REAR_SPEED_HALL_PIN, INPUT_PULLUP);
   pinMode(PRIM_HALL_PIN, INPUT_PULLUP);
 
   // Attach the interrupts to hall sensors to count rising edges
   attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, RISING);
   attachInterrupt(digitalPinToInterrupt(FL_HALL_PIN), incrementHall_FL, RISING);
-  attachInterrupt(digitalPinToInterrupt(SEC_HALL_PIN), incrementHall_SEC, RISING);
+  attachInterrupt(digitalPinToInterrupt(REAR_SPEED_HALL_PIN), incrementHall_REAR_SPEED, RISING);
   attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), incrementHall_PRIM, RISING);
 
   pinMode(STATUS_PIN, OUTPUT);
@@ -105,10 +105,10 @@ void loop(){
   // Variable names
   /*
   Serial.print("prim: ");
-  Serial.println(PrRIM_rpm);
+  Serial.println(PRIM_rpm);
   delay(10);
-  Serial.print(", Sec: ");
-  Serial.println(SEC_rpm);
+  Serial.print(", Rear Wheel Spped: ");
+  Serial.println(REAR_SPEED_int);
   */
 
   //  Strain data
@@ -234,8 +234,8 @@ void loop(){
         case PRIM:
           numLED = map(PRIM_rpm, 1700, 3800, -1, 8);
           break;
-        case SEC:
-          numLED = map(SEC_rpm, 0, 5000, -1, 8);
+        case REAR_SPEED_HUD:
+          numLED = map(REAR_SPEED_int, 0, 5000, -1, 8);
           break;
         case BRAKE:
           numLED = map(brake_pres, 0, 1200, -1, 8);
