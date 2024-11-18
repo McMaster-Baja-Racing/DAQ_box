@@ -2,8 +2,8 @@
 #include "../datastruct/dataTypeNames.h"
 
 // Definitions
-#define Rear_speed_counts_per_rotation 3
-#define Prim_counts_per_rotation 4
+#define Rear_speed_counts_per_rotation 24
+#define Prim_counts_per_rotation 6
 // Threshold for how many magnets until an rpm is recorded, as this number increase noise reduces but data can be missed
 // In 2023 we came to the conclusion that noise is okay and we can filter the data very well in post using the s-golay filter
 #define HALL_THRESH 1
