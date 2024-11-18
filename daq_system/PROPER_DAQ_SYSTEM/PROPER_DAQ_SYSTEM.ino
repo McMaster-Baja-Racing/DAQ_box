@@ -96,13 +96,8 @@ void setup() {
 
 void loop(){
 
-  // Debug functions, uncomment which ones you need
-  
-  //debug_brake_pressure();
-  //debug_rpm();
-  //debug_strain();
-  //debug_temperature();
-  //debug_suspension();
+  // Debug function, input mode you want to debug
+  controlDebug(Debug::NONE);
 
   if(mcp_initialized) {
     float hotTemp = mcp.readThermocouple();

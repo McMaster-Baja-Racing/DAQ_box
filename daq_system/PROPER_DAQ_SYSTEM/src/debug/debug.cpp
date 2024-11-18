@@ -6,20 +6,20 @@
 #include "../suspensionData/sus.h"
 
 // TODO: Move Brake Pressure stuff to own folder
-// void debug_brake_pressure(){
-//     Serial.print("Brake pressue (Psi): ");
-//     Serial.println(brake_pres);
-//     delay(50);
-// }
+void debug_brake_pressure(){
+    // Serial.print("Brake pressue (Psi): ");
+    // Serial.println(brake_pres);
+    // delay(50);
+}
 
 // TODO: After RPM is moved, uncomment this
-// void debug_rpm(){
-//     Serial.print("prim: ");
-//     Serial.println(PRIM_rpm);
-//     delay(10);
-//     Serial.print(", Sec: ");
-//     Serial.println(SEC_rpm);
-// }
+void debug_rpm(){
+    // Serial.print("prim: ");
+    // Serial.println(PRIM_rpm);
+    // delay(10);
+    // Serial.print(", Sec: ");
+    // Serial.println(SEC_rpm);
+}
 
 void debug_strain(){
     int strain [6];
@@ -51,3 +51,25 @@ void debug_suspension(){
     Serial.println(sus4);
     delay(100); 
 }  
+
+void controlDebug(Debug mode){
+    switch(mode){
+    case Debug::BRAKE_PRESSURE_DEBUG:
+      debug_brake_pressure();
+      break;
+    case Debug::RPM_DEBUG:
+      debug_rpm();
+      break;
+    case Debug::STRAIN_DEBUG:
+      debug_strain();
+      break;
+    case Debug::TEMPERATURE_DEBUG:
+      debug_temperature();
+      break;
+    case Debug::SUSPENSION_DEBUG:
+      debug_suspension();
+      break;
+    case Debug::NONE:
+      break;
+  }
+}
