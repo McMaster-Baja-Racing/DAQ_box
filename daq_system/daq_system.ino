@@ -11,6 +11,7 @@
 #include "src/counters/counters.h"
 #include "src/temperature/temperature.h"
 #include "src/RPM/rpm.h"
+#include "src/debug/debug.h"
 
 void setup() {
 
@@ -95,57 +96,9 @@ void setup() {
 }
 
 void loop(){
-  // CALIBRATION UNCOMMENT THIS LINE AND CHANGE TO YOUR VARIABLE
-  /*
-  Serial.print("Brake pressue (Psi): ");
-  Serial.println(brake_pres);
-  delay(50);
-  */
 
-  // Variable names
-  /*
-  Serial.print("prim: ");
-  Serial.println(PRIM_rpm);
-  delay(10);
-  Serial.print(", Rear Wheel Spped: ");
-  Serial.println(REAR_SPEED_int);
-  */
-
-  //  Strain data
-  /*
-  int strain [6];
-
-  for (int i = 0; i < 6; i++) {
-    Serial.print(i);
-    Serial.print(" is: ");
-    Serial.print(strain[i]);
-    Serial.print("  |  ");
-  }
-
-  Serial.println("");
-  delay(100);
-  */
-
-  // Temperature data
-  /*
-  int temperature;
-  */
-  
-  // DO NOT RUN WITH FINAL CODE
-  /*
-  Serial.print("Sus1: ");
-  Serial.print(sus1);
-  Serial.print(", Sus2: ");
-  Serial.print(sus2);
-  Serial.print(", Sus3: ");
-  Serial.print(sus3);
-  Serial.print(", Sus4: ");
-  Serial.println(sus4);
-  delay(100); 
-  Serial.print("Temp (C): ");
-  Serial.println(temperature);
-  delay(100);
-  */
+  // Debug function, input mode you want to debug
+  controlDebug(Debug::NONE);
 
   if(mcp_initialized) {
     float hotTemp = mcp.readThermocouple();
