@@ -5,16 +5,33 @@
 
 // Definitions
 #define GPSSerial Serial2 
+#define GPS_INTERVAL 100 
 
 // Declarations
 extern Adafruit_GPS GPS;
 
-extern uint16_t GPS_year;
 extern uint8_t GPS_month;
 extern uint8_t GPS_day;
 extern uint8_t GPS_hour;
 extern uint8_t GPS_minute;
 extern uint8_t GPS_seconds;
 
+extern uint16_t GPS_year;
+
+extern uint32_t gpsTimer;
+
+extern bool gps_goodmessage;
+extern bool gps_timesend;
+extern bool gps_flash;
+extern bool EN_GPS;
+
+extern float gps_speed;
+
 // Function Declarations
 void dateTime(uint16_t* date, uint16_t* time);
+
+void gpsMessage();
+
+void handleGPS();
+
+void gpsData();

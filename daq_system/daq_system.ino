@@ -2,7 +2,7 @@
 #include "daq_system_Teensy4.h"
 #include "src/datastruct/dataTypes.h"
 #include "src/fileInformation/file.h"
-#include "src/datetime/dateTime.h"
+#include "src/gps/gps.h"
 #include "src/hud/hud.h"
 #include "src/sdCard/sdCard.h"
 #include "src/imu/imu.h"
@@ -250,98 +250,9 @@ void loop(){
 
   // Read data from the GPS in the 'main loop'
   GPS.read();                 
-  if (GPS.newNMEAreceived()) {  
-   
-
-    if (!GPS.parse(GPS.lastNMEA())) {  // this also sets the newNMEAreceived() flag to false
-      gps_goodmessage = false;
-    } else {
-      gps_goodmessage = true;
-    }
-  }
-
-  if (millis() - gpsTimer > (GPS_INTERVAL - 1)) {
-    gpsTimer = millis();
-    gps_timesend = true;
-    if (GPS.fix) {
-      if (USE_SD) {
-        if (gps_active == false) {
-          GPS_year = GPS.year;
-          GPS_year = GPS.year;
-          GPS_month = GPS.month;
-          GPS_day = GPS.day;
-          GPS_hour = GPS.hour;
-          GPS_minute = GPS.minute;
-          GPS_seconds = GPS.seconds;
-          getFilename(GPS.hour, GPS.minute, GPS.seconds);
-          getDirectory(GPS.day, GPS.month, GPS.year);
-          SD.mkdir(directory);
-          Serial.println(filename);
-          Serial.println(directory);
-          strcpy(fileDir, directory);
-          strcat(fileDir, filename);
-          Serial.println(fileDir);
-          bajaData = SD.open(fileDir, FILE_WRITE);  // Create file
-          if (bajaData == 0) {
-            Serial.println("File failed to write");
-            // don't do anything more:
-            USE_SD = false;
-          }
-          gps_flash = true;
-          for (int i = 0; i < LED_COUNT; i++) {
-            strip.setPixelColor(i, strip.Color(0, 255, 0));
-          }
-          Serial.println("Fix Found Recording Starting");
-          digitalWrite(STATUS_PIN, HIGH);
-          strip.show();
-          delay(1000);
-          statusLED = true;
-        }
-      }
-      gps_active = true;
-
-    } else if (EN_GPS) {
-      if (gps_flash == true) {
-        for (int i = 0; i < LED_COUNT; i++) {
-          strip.setPixelColor(i, strip.Color(255, 0, 0));
-        }
-        gps_flash = false;
-      } else {
-        for (int i = 0; i < LED_COUNT; i++) {
-          strip.setPixelColor(i, strip.Color(0, 0, 0));
-        }
-        gps_flash = true;
-      }
-
-      strip.show();
-    }
-  }
-  if (EN_GPS && gps_timesend && gps_goodmessage && GPS.fix) {
-
-    buffPush(GPS_LATITUDE, GPS.latitude);
-    buffPush(GPS_LAT, (unsigned long)GPS.lat);
-
-    buffPush(GPS_LONGITUTE, GPS.longitude);
-    buffPush(GPS_LON, (unsigned long)GPS.lon);
-
-    buffPush(GPS_ANGLE, GPS.angle);
-
-    // GPS speed is in knots
-    gps_speed = GPS.speed * 1.852;
-    buffPush(GPS_SPEED, gps_speed);
-    buffPush(GPS_DAYMONTHYEAR, (unsigned long)((GPS.day << 16) + (GPS.month << 8) + (GPS.year)));
-    buffPush(GPS_SECONDMINUTEHOUR, (unsigned long)((GPS.seconds << 16) + (GPS.minute << 8) + (GPS.hour)));
-    if (GPS.minute != GPS_minute) {
-      GPS_year = GPS.year;
-      GPS_year = GPS.year;
-      GPS_month = GPS.month;
-      GPS_day = GPS.day;
-      GPS_hour = GPS.hour;
-      GPS_minute = GPS.minute;
-      GPS_seconds = GPS.seconds;
-    }
-    gps_timesend = false;
-  }
+  gpsMessage();
+  handleGPS();
+  gpsData();
   
   if (EN_BRAKE && millis() - brakeTimer > (BRAKE_INTERVAL - 1)) {
     brakeTimer = millis();
