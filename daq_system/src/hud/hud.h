@@ -38,12 +38,12 @@ const uint8_t B[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 };
 // Declarations
 extern Adafruit_NeoPixel strip;
 extern int HUD_SHOW;
+extern int brake_pres;
 
-bool EN_HUD = true;
+extern bool EN_HUD;
 
 extern unsigned long ledTimer;
 
-extern int brake_pres;
 extern float gps_speed;
 
 // Function Declarations

@@ -177,6 +177,8 @@ void loop(){
     buffPush(BATT_VOLT, batVoltage);
   }
 
+  setHUD();
+
   // Read data from the GPS in the 'main loop'
   GPS.read();                 
   if (GPS.newNMEAreceived()) {  

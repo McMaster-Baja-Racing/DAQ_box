@@ -1,7 +1,6 @@
 #include <cstdint>
 #include <Adafruit_NeoPixel.h>
 #include "hud.h"
-#include "../dataStruct/dataStruct.h"
 #include "../sdCard/sdCard.h"
 #include "../RPM/rpm.h"
 #include "../temperature/temperature.h"
@@ -11,12 +10,12 @@
 Adafruit_NeoPixel strip(LED_COUNT, HUD_PIN, NEO_GRB + NEO_KHZ800);
 
 int HUD_SHOW = BRAKE;
+int brake_pres = 0.0;
 
 bool EN_HUD = true;
 
 unsigned long ledTimer = millis();
 
-int brake_pres = 0.0;
 float gps_speed = 0;
 
 // Function Definitions
@@ -38,7 +37,7 @@ void setHUD() {
         case PRIM:
           numLED = map(PRIM_rpm, 1700, 3800, -1, 8);
           break;
-        case SEC:
+        case REAR_SPEED_HUD:
           numLED = map(REAR_SPEED_int, 0, 5000, -1, 8);
           break;
         case BRAKE:
