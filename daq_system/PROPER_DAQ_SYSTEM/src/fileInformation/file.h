@@ -3,7 +3,6 @@
 // Declarations
 extern char filename[];
 extern char directory[];
-extern char fileDir[];
 
 // Function Declarations
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second);

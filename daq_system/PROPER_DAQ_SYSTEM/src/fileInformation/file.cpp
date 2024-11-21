@@ -4,7 +4,6 @@
 // Initializations
 char filename [] = "/00000000.bin";
 char directory[] = "/00-00-00";
-char fileDir [23];
 
 // Function Definitions
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second) {
