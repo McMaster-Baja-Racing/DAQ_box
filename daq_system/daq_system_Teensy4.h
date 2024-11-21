@@ -38,8 +38,6 @@ bool EN_SUS4 = true;
 #define LED_COUNT  10  // 2 x 5 LED strip
 #define BRIGHTNESS  50  // Max brightness = 255
 
-int brake_pres = 0.0;
-
 /***  General  ***/
 // Interval between each data collection point, this is where you set data logging rate
 // These values are in ms not hz
@@ -89,7 +87,6 @@ bool gps_flash = true;
 bool gps_timesend = false;
 bool gps_goodmessage = false;
 
-float gps_speed = 0;
 
 /***  SD Card  ***/ 
 bool send_data = false;
