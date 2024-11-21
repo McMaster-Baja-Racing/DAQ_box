@@ -22,7 +22,6 @@
 /***  Settings  ***/
 
 #define SHOW_DEBUG false
-bool EN_BATT = true;
 bool EN_HUD = true;
 bool EN_GPS = true;
 bool EN_RPM = true;
@@ -47,7 +46,6 @@ int brake_pres = 0.0;
 // These values are in ms not hz
 //TO DO: Add comments explaining why interval values are set to what they are
 
-#define BATT_INTERVAL 10000
 #define IMU_INTERVAL 10
 #define GPS_INTERVAL 100 
 #define LED_INTERVAL 100  // Period in msec for LED update (larger than 100 produces noticable lag)
@@ -65,7 +63,6 @@ int brake_pres = 0.0;
 #define HALL_THRESH 1
 
 /***  Pins  ***/
-#define VOLT_PIN  14
 #define FR_HALL_PIN 2
 #define FL_HALL_PIN 3
 #define SEC_HALL_PIN 4
@@ -77,7 +74,6 @@ int brake_pres = 0.0;
 /***********************************/
 
 //Timers
-unsigned long battTimer = millis();
 unsigned long tempTimer = millis();
 unsigned long ledTimer = millis();
 unsigned long queueSizeTimer = millis();
@@ -134,10 +130,6 @@ int SEC_rpm = 0;
 int SEC_counts_per_rotation = 3;
 
 /***  Status LED that is connected to the outside of the box  ***/ 
-
-/***  Battery  ***/ 
-float batVoltage = 0;
-int batPercent = 0;
 
 int imuAccelCal = false;
 int imuGyroCal = false;
