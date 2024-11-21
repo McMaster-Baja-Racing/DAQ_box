@@ -23,7 +23,6 @@
 
 #define SHOW_DEBUG false
 bool EN_BATT = true;
-bool EN_HUD = true;
 bool EN_GPS = true;
 bool EN_TEMP = true;  // Uses prim_temp connector on PCB
 bool EN_BRAKE = true;
@@ -49,7 +48,6 @@ int brake_pres = 0.0;
 #define BATT_INTERVAL 10000
 #define IMU_INTERVAL 10
 #define GPS_INTERVAL 100 
-#define LED_INTERVAL 100  // Period in msec for LED update (larger than 100 produces noticable lag)
 #define SD_INTERVAL 25
 #define QUEUE_SIZE_INTERVAL 1000  // For debugging purposes, shows you current queue length on serial moniter
 #define BRAKE_INTERVAL 10
@@ -72,7 +70,6 @@ int brake_pres = 0.0;
 //Timers
 unsigned long battTimer = millis();
 unsigned long tempTimer = millis();
-unsigned long ledTimer = millis();
 unsigned long queueSizeTimer = millis();
 unsigned long rpmTimer = millis();
 unsigned long brakeTimer = millis();

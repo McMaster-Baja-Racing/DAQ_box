@@ -5,6 +5,7 @@
 #define LED_COUNT 10  // 2 x 5 LED strip
 #define BRIGHTNESS 50  // Max brightness = 255
 #define HUD_PIN 9  // Digital Pin 6 for HUD LED's
+#define LED_INTERVAL 100  // Period in msec for LED update (larger than 100 produces noticable lag)
 
 enum HUD {
   PRIM,
@@ -38,5 +39,11 @@ const uint8_t B[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 255, 255 };
 extern Adafruit_NeoPixel strip;
 extern int HUD_SHOW;
 
+bool EN_HUD = true;
+
+extern unsigned long ledTimer;
+
 // Function Declarations
 void setColour(int8_t edge);
+
+void setHUD();
