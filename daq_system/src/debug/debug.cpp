@@ -4,6 +4,7 @@
 #include "../strainData/strain.h"
 #include "../temperature/temperature.h"
 #include "../suspensionData/sus.h"
+#include "../RPM/rpm.h"
 
 // TODO: Move Brake Pressure stuff to own folder
 void debug_brake_pressure(){
@@ -12,13 +13,12 @@ void debug_brake_pressure(){
     // delay(50);
 }
 
-// TODO: After RPM is moved, uncomment this
 void debug_rpm(){
-    // Serial.print("prim: ");
-    // Serial.println(PRIM_rpm);
-    // delay(10);
-    // Serial.print(", Sec: ");
-    // Serial.println(SEC_rpm);
+    Serial.print("prim: ");
+    Serial.println(PRIM_rpm);
+    delay(10);
+    Serial.print(", Sec: ");
+    Serial.println(REAR_SPEED_int);
 }
 
 void debug_strain(){
