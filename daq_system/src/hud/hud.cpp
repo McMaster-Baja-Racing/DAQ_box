@@ -46,7 +46,7 @@ void setHUD() {
         case GPS_S:
           numLED = map(gps_speed, 5, 45, -1, 8);
           break;
-          //TODO, fix this once battery check is merged in
+          //TODO: fix this once battery check is merged in
         // case BATT_PERCENT:
         //   numLED = map(batPercent, 0, 100, -1, 8);
         //   break;
