@@ -64,6 +64,7 @@ void gpsMessage(){
   }
 }
 
+// TODO: Cleanup this function
 void handleGPS() {
   if (millis() - gpsTimer > (GPS_INTERVAL - 1)) {
     gpsTimer = millis();
