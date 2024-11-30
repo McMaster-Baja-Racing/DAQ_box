@@ -10,6 +10,7 @@
 #include "src/strainData/strain.h"
 #include "src/counters/counters.h"
 #include "src/temperature/temperature.h"
+#include "src/battery/battery.h"
 #include "src/RPM/rpm.h"
 #include "src/debug/debug.h"
 
@@ -98,7 +99,6 @@ void setup() {
 void loop(){
 
   // Debug function, input mode you want to debug
-  controlDebug(Debug::NONE);
 
   if(mcp_initialized) {
     float hotTemp = mcp.readThermocouple();
@@ -158,25 +158,12 @@ void loop(){
   }
 
   //-------------RPM Check-------------------
-
   rpmCalc();
 
   //-------------Battery Check---------------
-  if (EN_BATT && millis() - battTimer > BATT_INTERVAL) {
-    battTimer = millis();
-    batVoltage = analogRead(VOLT_PIN);
-    batPercent = map(batVoltage, 820, 930, 0, 100);
-    if (batPercent <= 0) {
-      batPercent = 0;
-    } else if (batPercent >= 100) {
-      batPercent = 100;
-    }
-    batVoltage = ((batVoltage / 1024) * 9.1905);
+  batteryCheck();
 
-    buffPush(BATT_PERC, (unsigned long)(batPercent));
-    buffPush(BATT_VOLT, batVoltage);
-  }
-
+  //-------------LED Strip---------------------
   setHUD();
 
   // Read data from the GPS in the 'main loop'

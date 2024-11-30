@@ -22,7 +22,7 @@
 /***  Settings  ***/
 
 #define SHOW_DEBUG false
-bool EN_BATT = true;
+bool EN_HUD = true;
 bool EN_GPS = true;
 bool EN_TEMP = true;  // Uses prim_temp connector on PCB
 bool EN_BRAKE = true;
@@ -43,7 +43,6 @@ bool EN_SUS4 = true;
 // These values are in ms not hz
 //TO DO: Add comments explaining why interval values are set to what they are
 
-#define BATT_INTERVAL 10000
 #define IMU_INTERVAL 10
 #define GPS_INTERVAL 100 
 #define SD_INTERVAL 25
@@ -54,7 +53,6 @@ bool EN_SUS4 = true;
 #define TEMP_INTERVAL 500
 
 /***  Pins  ***/
-#define VOLT_PIN  14
 #define FR_HALL_PIN 2
 #define FL_HALL_PIN 3
 #define REAR_SPEED_HALL_PIN 4
@@ -66,7 +64,6 @@ bool EN_SUS4 = true;
 /***********************************/
 
 //Timers
-unsigned long battTimer = millis();
 unsigned long tempTimer = millis();
 unsigned long queueSizeTimer = millis();
 unsigned long rpmTimer = millis();
@@ -106,10 +103,6 @@ unsigned long FL_past_time = micros();
 bool FL_stopped = false;
 int FL_rpm = 0;
 /***  Status LED that is connected to the outside of the box  ***/ 
-
-/***  Battery  ***/ 
-float batVoltage = 0;
-int batPercent = 0;
 
 int imuAccelCal = false;
 int imuGyroCal = false;
