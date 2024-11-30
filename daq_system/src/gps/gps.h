@@ -35,3 +35,5 @@ void gpsMessage();
 void handleGPS();
 
 void gpsData();
+
+void gps();

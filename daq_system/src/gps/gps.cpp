@@ -151,5 +151,10 @@ void gpsData(){
     }
     gps_timesend = false;
   }
-  
+}
+
+void gps(){
+  gpsMessage();
+  handleGPS();
+  gpsData();
 }

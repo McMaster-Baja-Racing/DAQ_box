@@ -250,9 +250,7 @@ void loop(){
 
   // Read data from the GPS in the 'main loop'
   GPS.read();                 
-  gpsMessage();
-  handleGPS();
-  gpsData();
+  gps();
   
   if (EN_BRAKE && millis() - brakeTimer > (BRAKE_INTERVAL - 1)) {
     brakeTimer = millis();
