@@ -177,45 +177,7 @@ void loop(){
     buffPush(BATT_VOLT, batVoltage);
   }
 
-
-  //-------------LED Strip---------------------
-  if (EN_HUD && millis() - ledTimer > LED_INTERVAL) {
-    ledTimer = millis();
-    if (gps_active) {
-      int numLED = 0;
-      switch (HUD_SHOW) {
-        case PRIM:
-          numLED = map(PRIM_rpm, 1700, 3800, -1, 8);
-          break;
-        case REAR_SPEED_HUD:
-          numLED = map(REAR_SPEED_int, 0, 5000, -1, 8);
-          break;
-        case BRAKE:
-          numLED = map(brake_pres, 0, 1200, -1, 8);
-          break;
-        case GPS_S:
-          numLED = map(gps_speed, 5, 45, -1, 8);
-          break;
-        case BATT_PERCENT:
-          numLED = map(batPercent, 0, 100, -1, 8);
-          break;
-        case STRAIN:
-          numLED = map(temperature, 0, 150, -1, 8);
-          break;
-        case SUS1:
-          numLED = map(sus1, 140, 310, -1, 8);
-          break;
-        case SUS2:
-          numLED = map(sus2, 50, 312, -1, 8);
-          break;
-      }
-      if (numLED > 8) {
-            numLED = 8;
-        }
-      setColour(numLED);
-    }
-    strip.show();  // Send the updated pixel colors to the hardware.
-  }
+  setHUD();
 
   // Read data from the GPS in the 'main loop'
   GPS.read();                 
