@@ -25,7 +25,6 @@
 bool EN_BATT = true;
 bool EN_HUD = true;
 bool EN_GPS = true;
-bool EN_RPM = true;
 bool EN_TEMP = true;  // Uses prim_temp connector on PCB
 bool EN_BRAKE = true;
 bool EN_IMU = true;
@@ -58,17 +57,11 @@ int brake_pres = 0.0;
 #define SUS_INTERVAL 5
 #define TEMP_INTERVAL 500
 
-/***  RPM Sensors  ***/
-
-// Threshold for how many magnets until an rpm is recorded, as this number increase noise reduces but data can be missed
-// In 2023 we came to the conclusion that noise is okay and we can filter the data very well in post using the s-golay filter
-#define HALL_THRESH 1
-
 /***  Pins  ***/
 #define VOLT_PIN  14
 #define FR_HALL_PIN 2
 #define FL_HALL_PIN 3
-#define SEC_HALL_PIN 4
+#define REAR_SPEED_HALL_PIN 4
 #define PRIM_HALL_PIN 5
 #define BUTT_PIN 29
 
@@ -118,21 +111,6 @@ unsigned long FL_end_time = micros();
 unsigned long FL_past_time = micros();
 bool FL_stopped = false;
 int FL_rpm = 0;
-
-unsigned long PRIM_start = micros();
-unsigned long PRIM_end_time = micros();
-unsigned long PRIM_past_time = micros();
-bool PRIM_stopped = false;
-int PRIM_rpm = 0;
-int Prim_counts_per_rotation = 4;
-
-unsigned long SEC_start = micros();
-unsigned long SEC_end_time = micros();
-unsigned long SEC_past_time = micros();
-bool SEC_stopped = false;
-int SEC_rpm = 0;
-int SEC_counts_per_rotation = 3;
-
 /***  Status LED that is connected to the outside of the box  ***/ 
 
 /***  Battery  ***/ 

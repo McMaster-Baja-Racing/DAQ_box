@@ -10,6 +10,7 @@
 #include "src/strainData/strain.h"
 #include "src/counters/counters.h"
 #include "src/temperature/temperature.h"
+#include "src/RPM/rpm.h"
 #include "src/debug/debug.h"
 
 void setup() {
@@ -25,14 +26,14 @@ void setup() {
   delay(50);
 
   pinMode(FR_HALL_PIN, INPUT_PULLUP);
-  pinMode(FR_HALL_PIN, INPUT_PULLUP);
-  pinMode(SEC_HALL_PIN, INPUT_PULLUP);
+  pinMode(FL_HALL_PIN, INPUT_PULLUP);
+  pinMode(REAR_SPEED_HALL_PIN, INPUT_PULLUP);
   pinMode(PRIM_HALL_PIN, INPUT_PULLUP);
 
   // Attach the interrupts to hall sensors to count rising edges
   attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, RISING);
   attachInterrupt(digitalPinToInterrupt(FL_HALL_PIN), incrementHall_FL, RISING);
-  attachInterrupt(digitalPinToInterrupt(SEC_HALL_PIN), incrementHall_SEC, RISING);
+  attachInterrupt(digitalPinToInterrupt(REAR_SPEED_HALL_PIN), incrementHall_REAR_SPEED, RISING);
   attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), incrementHall_PRIM, RISING);
 
   pinMode(STATUS_PIN, OUTPUT);
@@ -137,7 +138,7 @@ void loop(){
         }
 
         // File header example
-        // bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time, Primary Temp i2c, Secondary Temp i2c, Suspension Travel, Strain, FR_RPM, SEC_RPM,Battery Percentage, Battery Voltage");
+        // bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time, Primary Temp i2c, Secondary Temp i2c, Suspension Travel, Strain, FR_RPM, REAR_SPEED, Battery Percentage, Battery Voltage");
         
         gps_flash = true;
         
@@ -156,41 +157,9 @@ void loop(){
     Serial.println();
   }
 
-  //-------------RPM----------------------
-  if (EN_RPM) {
-    if (SEC_hall_count > HALL_THRESH) {
-      SEC_end_time = micros();
-      SEC_past_time = (SEC_end_time - SEC_start);
-      if (SEC_stopped) {
-        SEC_stopped = false;
-      }
-      SEC_rpm = (SEC_hall_count / ((SEC_past_time / 1000000.0) / 60)) / SEC_counts_per_rotation;
-      buffPush(RPM_SEC, (float)SEC_rpm);
-      SEC_hall_count = 0;
-      SEC_start = micros();
-    }
-    if (!SEC_stopped && (micros() - SEC_start >= 1000000)) {
-      buffPush(RPM_SEC, float(0));
-      SEC_stopped = true;
-    }
+  //-------------RPM Check-------------------
 
-    if (PRIM_hall_count > HALL_THRESH) {
-      PRIM_end_time = micros();
-      PRIM_past_time = (PRIM_end_time - PRIM_start);
-      if (PRIM_stopped) {
-        PRIM_stopped = false;
-      }
-      PRIM_rpm = (PRIM_hall_count / ((PRIM_past_time / 1000000.0) / 60)) / Prim_counts_per_rotation;
-      buffPush(RPM_PRIM, (float)PRIM_rpm);
-      PRIM_hall_count = 0;
-      PRIM_start = micros();
-    }
-    if (!PRIM_stopped && (micros() - PRIM_start >= 1000000)) {
-      buffPush(RPM_PRIM, float(0));
-      PRIM_stopped = true;
-    }
-  }
-
+  rpmCalc();
 
   //-------------Battery Check---------------
   if (EN_BATT && millis() - battTimer > BATT_INTERVAL) {
@@ -218,8 +187,8 @@ void loop(){
         case PRIM:
           numLED = map(PRIM_rpm, 1700, 3800, -1, 8);
           break;
-        case SEC:
-          numLED = map(SEC_rpm, 0, 5000, -1, 8);
+        case REAR_SPEED_HUD:
+          numLED = map(REAR_SPEED_int, 0, 5000, -1, 8);
           break;
         case BRAKE:
           numLED = map(brake_pres, 0, 1200, -1, 8);
@@ -251,8 +220,6 @@ void loop(){
   // Read data from the GPS in the 'main loop'
   GPS.read();                 
   if (GPS.newNMEAreceived()) {  
-   
-
     if (!GPS.parse(GPS.lastNMEA())) {  // this also sets the newNMEAreceived() flag to false
       gps_goodmessage = false;
     } else {
@@ -316,6 +283,7 @@ void loop(){
       strip.show();
     }
   }
+
   if (EN_GPS && gps_timesend && gps_goodmessage && GPS.fix) {
 
     buffPush(GPS_LATITUDE, GPS.latitude);
