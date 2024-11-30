@@ -44,8 +44,6 @@ extern bool EN_HUD;
 
 extern unsigned long ledTimer;
 
-extern float gps_speed;
-
 // Function Declarations
 void setColour(int8_t edge);
 

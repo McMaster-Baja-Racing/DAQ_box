@@ -5,6 +5,7 @@
 #include "../RPM/rpm.h"
 #include "../temperature/temperature.h"
 #include "../suspensionData/sus.h"
+#include "../gps/gps.h"
 
 // Initializations
 Adafruit_NeoPixel strip(LED_COUNT, HUD_PIN, NEO_GRB + NEO_KHZ800);
@@ -16,7 +17,6 @@ bool EN_HUD = true;
 
 unsigned long ledTimer = millis();
 
-float gps_speed = 0;
 
 // Function Definitions
 void setColour(int8_t edge) {

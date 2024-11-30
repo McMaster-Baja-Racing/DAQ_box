@@ -22,8 +22,6 @@
 /***  Settings  ***/
 
 #define SHOW_DEBUG false
-bool EN_HUD = true;
-bool EN_GPS = true;
 bool EN_TEMP = true;  // Uses prim_temp connector on PCB
 bool EN_BRAKE = true;
 bool EN_IMU = true;
@@ -44,7 +42,6 @@ bool EN_SUS4 = true;
 //TO DO: Add comments explaining why interval values are set to what they are
 
 #define IMU_INTERVAL 10
-#define GPS_INTERVAL 100 
 #define SD_INTERVAL 25
 #define QUEUE_SIZE_INTERVAL 1000  // For debugging purposes, shows you current queue length on serial moniter
 #define BRAKE_INTERVAL 10
@@ -76,14 +73,9 @@ unsigned long strainTimer2 = millis();
 unsigned long susTimer2 = millis();
 unsigned long susTimer3 = millis();
 unsigned long susTimer4 = millis();
-uint32_t gpsTimer = millis();
 
 /***  GPS  ***/ 
 bool use_gps = false;
-bool gps_flash = true;
-bool gps_timesend = false;
-bool gps_goodmessage = false;
-
 
 /***  SD Card  ***/ 
 bool send_data = false;
@@ -113,5 +105,4 @@ int lastPressed = 0;
 
 // File name MUST be 8 or less characters
 // https://www.arduino.cc/en/Reference/SDCardNotes
-char fileDir [23];
 const int chipSelect = BUILTIN_SDCARD;
