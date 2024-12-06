@@ -107,55 +107,8 @@ void loop(){
     Serial.println(" C");
   }
 
-  inputButton.update();
-
-  if (inputButton.fallingEdge()) {
-    Serial.print("Button Pressed: ");
-
-    if (gps_active) {
-      HUD_SHOW = (HUD_SHOW + 1) % HUD_MODES; // Cycle through the HUD modes
-      Serial.print(" Mode = "); 
-      Serial.print(HUD_SHOW);
-    } else {
-
-      if (millis() - lastPressed < 250) {
-        Serial.println("Start recording"); 
-        EN_GPS = false;
-        gps_active = true;
-
-        SD.mkdir(directory);
-        Serial.println(filename);
-        Serial.println(directory);
-
-        strcpy(fileDir, directory);
-        strcat(fileDir, filename);
-        Serial.println(fileDir);
-
-        bajaData = SD.open(fileDir, FILE_WRITE);
-        if (bajaData == 0) {
-          Serial.println("File failed to write");
-          USE_SD = false;
-        }
-
-        // File header example
-        // bajaData.println("Time, Absolute X, Absolute Y, Absolute Z, Accel X, Accel Y, Accel Z, Gravity X, Gravity Y, Gravity Z, Gyro X, Gyro Y, Gyro Z, IMU Temp, HasGPS, Latitude (DDMM.MMMMM), Longitude (DDDMM.MMMMM)(will remove leading zeros), Angle (North is 0 and CW)), Speed (knots), Date + Time, Primary Temp i2c, Secondary Temp i2c, Suspension Travel, Strain, FR_RPM, REAR_SPEED, Battery Percentage, Battery Voltage");
-        
-        gps_flash = true;
-        
-        for (int i = 0; i < LED_COUNT; i++) {
-          strip.setPixelColor(i, strip.Color(0, 255, 0));
-        }
-
-        Serial.print("GPS cancelled");
-        digitalWrite(STATUS_PIN, HIGH);
-        strip.show();
-        delay(1000);
-        statusLED = true;
-      }
-      lastPressed = millis();
-    }
-    Serial.println();
-  }
+  //-------------Button Check----------------
+  inputButton();
 
   //-------------RPM Check-------------------
   rpmCalc();
