@@ -8,6 +8,8 @@
 extern float temperature;
 extern bool mcp_initialized;
 extern Adafruit_MCP9600 mcp;
+
 // Function Declarations
 void tempData();
 void tempSetup();
+void readTemp();

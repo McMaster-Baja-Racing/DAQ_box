@@ -98,14 +98,11 @@ void setup() {
 
 void loop(){
 
-  // Debug function, input mode you want to debug
+  //-------------Debug Function-------------------
+  controlDebug(Debug::NONE);
 
-  if(mcp_initialized) {
-    float hotTemp = mcp.readThermocouple();
-    Serial.print("Thermocouple Temperature: ");
-    Serial.print(hotTemp);
-    Serial.println(" C");
-  }
+  //-------------Temperature Check-------------------
+  readTemp();
 
   inputButton.update();
 
