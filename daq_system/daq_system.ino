@@ -107,10 +107,10 @@ void loop(){
     Serial.println(" C");
   }
 
-  //-------------Button Check----------------
-  inputButton();
+  //-------------Handle Input Button----------------
+  handleInputButton();
 
-  //-------------RPM Check-------------------
+  //-------------RPM Calculations-------------------
   rpmCalc();
 
   //-------------Battery Check---------------
@@ -119,7 +119,7 @@ void loop(){
   //-------------LED Strip---------------------
   setHUD();
 
-  // Read data from the GPS in the 'main loop'
+    //-------------GPS Data---------------------
   GPS.read();                 
   gps();
   

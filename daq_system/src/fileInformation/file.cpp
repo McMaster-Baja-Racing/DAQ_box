@@ -9,7 +9,7 @@ char filename [] = "/00000000.bin";
 char directory[] = "/00-00-00";
 char fileDir [23];
 
-Bounce button = Bounce(BUTT_PIN,5);
+Bounce inputButton = Bounce(BUTT_PIN,5);
 int lastPressed = 0;
 
 // Function Definitions
@@ -24,10 +24,10 @@ void getDirectory(uint8_t day, uint8_t month, uint8_t year) {
   sprintf(directory, "/%02d-%02d-%02d", year, month, day);
 }
 
-void inputButton() {
-  button.update();
+void handleInputButton() {
+  inputButton.update();
 
-  if (button.fallingEdge()) {
+  if (inputButton.fallingEdge()) {
     Serial.print("Button Pressed: ");
 
     if (gps_active) {
