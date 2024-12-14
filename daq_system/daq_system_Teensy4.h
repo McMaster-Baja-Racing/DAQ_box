@@ -54,7 +54,6 @@ bool EN_SUS4 = true;
 #define FL_HALL_PIN 3
 #define REAR_SPEED_HALL_PIN 4
 #define PRIM_HALL_PIN 5
-#define BUTT_PIN 29
 
 /***********************************/
 /***  Start of Global variables  ***/
@@ -98,10 +97,6 @@ int FL_rpm = 0;
 
 int imuAccelCal = false;
 int imuGyroCal = false;
-
-/***  Button Bouncer  ***/ 
-Bounce inputButton = Bounce(BUTT_PIN,5);
-int lastPressed = 0;
 
 // File name MUST be 8 or less characters
 // https://www.arduino.cc/en/Reference/SDCardNotes
