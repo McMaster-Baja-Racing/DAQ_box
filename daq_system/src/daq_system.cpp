@@ -74,7 +74,7 @@ void setup() {
   }
 
   // Set up Temperature Sensor
-  //tempSetup();
+  tempSetup();
 
   // Set up GPS
   if (!GPS.begin(9600)) {
@@ -116,7 +116,7 @@ void loop(){
   //-------------LED Strip---------------------
   setHUD();
 
-    //-------------GPS Data---------------------
+  //-------------GPS Data---------------------
   GPS.read();                 
   gps();
   
