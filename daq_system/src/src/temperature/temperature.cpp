@@ -33,8 +33,8 @@ void tempSetup() {
 void readTemp() {
   if(mcp_initialized) {
     float hotTemp = mcp.readThermocouple();
-    Serial.print("Thermocouple Temperature: ");
-    Serial.print(hotTemp);
-    Serial.println(" C");
+    //Serial.print("Thermocouple Temperature: ");
+    //Serial.print(hotTemp);
+    //Serial.println(" C");
   }
 }
