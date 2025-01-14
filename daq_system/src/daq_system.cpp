@@ -74,7 +74,7 @@ void setup() {
   }
 
   // Set up Temperature Sensor
-  //tempSetup();
+  tempSetup();
 
   // Set up GPS
   if (!GPS.begin(9600)) {
@@ -116,7 +116,7 @@ void loop(){
   //-------------LED Strip---------------------
   setHUD();
 
-    //-------------GPS Data---------------------
+  //-------------GPS Data---------------------
   GPS.read();                 
   gps();
   
@@ -125,38 +125,47 @@ void loop(){
     brake_pres = ((((analogRead(17) / 1024.0) * 5.15625) - 0.4) * 1250);
     buffPush(BRAKE_PRESS, (float)(brake_pres));
   }
+
   if (EN_IMU && millis() - imuTimer > (IMU_INTERVAL - 1)) {
     imuTimer = millis();
     imuData();
   }
+
   if (EN_STRAIN1 && millis() - strainTimer1 > (STRAIN_INTERVAL - 1)) {
     strainTimer1 = millis();
     strainData(2);
   }
+
   if (EN_STRAIN2 && millis() - strainTimer2 > (STRAIN_INTERVAL - 1)) {
     strainTimer2 = millis();
     strainData(3);
   }
+  
   if (EN_SUS1 && millis() - susTimer1 > (SUS_INTERVAL - 1)) {
     susTimer1 = millis();
     susData1();
   }
+
   if (EN_SUS2 && millis() - susTimer2 > (SUS_INTERVAL - 1)) {
     susTimer2 = millis();
     susData2();
   }
+
   if (EN_SUS3 && millis() - susTimer3 > (SUS_INTERVAL - 1)) {
     susTimer3 = millis();
     susData3();
   }
+
   if (EN_SUS4 && millis() - susTimer4 > (SUS_INTERVAL - 1)) {
     susTimer4 = millis();
     susData4();
   }
+
   if (EN_TEMP && millis() - tempTimer > (TEMP_INTERVAL - 1)) {
     tempTimer = millis();
     tempData();
   }
+
   if (SHOW_DEBUG && (millis() - queueSizeTimer > (QUEUE_SIZE_INTERVAL - 1))) {
     queueSizeTimer = millis();
     Serial.print("savingBuff Size = ");
@@ -165,6 +174,7 @@ void loop(){
     Serial.print("sdBuff Size = ");
     Serial.println((*sdBuff).size());
   }
+  
   if (millis() - sdTimer > (SD_INTERVAL - 1)) {
     sdTimer = millis();
     sdSend();

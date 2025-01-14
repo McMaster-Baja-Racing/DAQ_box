@@ -1,23 +1,5 @@
 //Libraries
-#include <Wire.h>
-
-// For IMU
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BNO055.h>
-#include <utility/imumaths.h>
-
-// For GPS
-#include <Adafruit_GPS.h>
-
-// For display
-#include <Adafruit_NeoPixel.h>
-
-// For SD CardFs
-#include <SPI.h>
 #include <SD.h>
-
-// For Push`s
-#include <Bounce.h>
 
 /***  Settings  ***/
 
@@ -31,10 +13,6 @@ bool EN_SUS1 = true;
 bool EN_SUS2 = true;
 bool EN_SUS3 = true;
 bool EN_SUS4 = true;
-
-/***  HUD  ***/
-#define LED_COUNT  10  // 2 x 5 LED strip
-#define BRIGHTNESS  50  // Max brightness = 255
 
 /***  General  ***/
 // Interval between each data collection point, this is where you set data logging rate
@@ -62,7 +40,6 @@ bool EN_SUS4 = true;
 //Timers
 unsigned long tempTimer = millis();
 unsigned long queueSizeTimer = millis();
-unsigned long rpmTimer = millis();
 unsigned long brakeTimer = millis();
 unsigned long imuTimer = millis();
 unsigned long sdTimer = millis();
@@ -76,28 +53,4 @@ unsigned long susTimer4 = millis();
 /***  GPS  ***/ 
 bool use_gps = false;
 
-/***  SD Card  ***/ 
-bool send_data = false;
-SdFs sd;
-FsFile file;
-
-/***  RPM & Speed  ***/ 
-unsigned long FR_start = micros();
-unsigned long FR_end_time = micros();
-unsigned long FR_past_time = micros();
-bool FR_stopped = false;
-int FR_rpm = 0;
-
-unsigned long FL_start = micros();
-unsigned long FL_end_time = micros();
-unsigned long FL_past_time = micros();
-bool FL_stopped = false;
-int FL_rpm = 0;
-/***  Status LED that is connected to the outside of the box  ***/ 
-
-int imuAccelCal = false;
-int imuGyroCal = false;
-
-// File name MUST be 8 or less characters
-// https://www.arduino.cc/en/Reference/SDCardNotes
 const int chipSelect = BUILTIN_SDCARD;
