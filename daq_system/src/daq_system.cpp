@@ -30,6 +30,8 @@ void setup() {
   pinMode(FL_HALL_PIN, INPUT_PULLUP);
   pinMode(REAR_SPEED_HALL_PIN, INPUT_PULLUP);
   pinMode(PRIM_HALL_PIN, INPUT_PULLUP);
+  pinMode(24, INPUT)
+  pinMode(25, INPUT)
 
   // Attach the interrupts to hall sensors to count rising edges
   attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, RISING);
