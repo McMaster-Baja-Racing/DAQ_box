@@ -3,6 +3,11 @@
 #include "../datastruct/dataTypes.h"
 
 // Initializations
+float mRight = -24.282;  // Slope for the right sensor
+float bRight = 439.54;  // Intercept for the right sensor
+float mLeft = -16.843;   // Slope for the left sensor
+float bLeft = 406.62;   // Intercept for the left sensor
+
 int sus1;
 int sus2;
 int sus3;
@@ -10,17 +15,19 @@ int sus4;
 
 // Function Definitions
 void susData1() { // Front Left
-  sus1 = analogRead(susPin[0]);
-  //  Serial.print("susdata1: ");
-  //  Serial.print(sus1);
-  buffPush(SUS_TRAV_FR, (unsigned long)(sus1));
+  int sensorValueRight = analogRead(susPin[0]);
+  float suspensionDistanceRight = ( sensorValueRight - bRight) / mRight;
+  //Serial.print("Suspension Distance Right: ");
+  //Serial.println(suspensionDistanceRight);
+  buffPush(SUS_TRAV_FR, (unsigned long)(suspensionDistanceRight));
 }
 
 void susData2() { // Front Right
-  sus2 = analogRead(susPin[1]);
-  //  Serial.print(" susdata2: ");
-  //  Serial.println(sus2);
-  buffPush(SUS_TRAV_FL, (unsigned long)(sus2)); 
+  int sensorValueLeft = analogRead(susPin[1]);
+  float suspensionDistanceLeft = ( sensorValueLeft - bLeft) / mLeft;
+  //Serial.print("Suspension Distance Left: ");
+  //Serial.println(suspensionDistanceLeft);
+  buffPush(SUS_TRAV_FL, (unsigned long)(suspensionDistanceLeft)); 
 }
 
 void susData3() { // Rear Right

@@ -7,7 +7,7 @@
 bool EN_TEMP = true;  // Uses prim_temp connector on PCB
 bool EN_BRAKE = true;
 bool EN_IMU = true;
-bool EN_STRAIN1 = false;
+bool EN_STRAIN1 = true; // On for Sheave position
 bool EN_STRAIN2 = false;
 bool EN_SUS1 = true;
 bool EN_SUS2 = true;
@@ -23,7 +23,7 @@ bool EN_SUS4 = true;
 #define SD_INTERVAL 25
 #define QUEUE_SIZE_INTERVAL 1000  // For debugging purposes, shows you current queue length on serial moniter
 #define BRAKE_INTERVAL 10
-#define STRAIN_INTERVAL 1
+#define STRAIN_INTERVAL 10
 #define SUS_INTERVAL 5
 #define TEMP_INTERVAL 500
 

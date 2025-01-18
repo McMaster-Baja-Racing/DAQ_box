@@ -13,6 +13,7 @@
 #include "src/battery/battery.h"
 #include "src/RPM/rpm.h"
 #include "src/debug/debug.h"
+#include "src/sheavePosition/sheavePos.h"
 
 void setup() {
 
@@ -30,6 +31,8 @@ void setup() {
   pinMode(FL_HALL_PIN, INPUT_PULLUP);
   pinMode(REAR_SPEED_HALL_PIN, INPUT_PULLUP);
   pinMode(PRIM_HALL_PIN, INPUT_PULLUP);
+  pinMode(24, INPUT);
+  pinMode(25, INPUT);
 
   // Attach the interrupts to hall sensors to count rising edges
   attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, RISING);
@@ -90,6 +93,13 @@ void setup() {
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY); // Minimum recommended data
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 10 Hz update rate
 
+  Serial.println("Adafruit VL6180x test!");
+  if (! vl.begin()) {
+    Serial.println("Failed to find sensor");
+    while (1);
+  }
+  Serial.println("Sensor found!");
+
   Serial.println("Setup Finished");
   digitalWrite(STATUS_PIN, LOW);
 
@@ -133,7 +143,8 @@ void loop(){
 
   if (EN_STRAIN1 && millis() - strainTimer1 > (STRAIN_INTERVAL - 1)) {
     strainTimer1 = millis();
-    strainData(2);
+    //push the time of flight data to the buffer
+    sheavePos();
   }
 
   if (EN_STRAIN2 && millis() - strainTimer2 > (STRAIN_INTERVAL - 1)) {
