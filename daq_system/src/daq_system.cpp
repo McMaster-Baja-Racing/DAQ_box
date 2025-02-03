@@ -93,12 +93,12 @@ void setup() {
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY); // Minimum recommended data
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 10 Hz update rate
 
-  Serial.println("Adafruit VL6180x test!");
-  if (! vl.begin()) {
-    Serial.println("Failed to find sensor");
-    while (1);
-  }
-  Serial.println("Sensor found!");
+  // Serial.println("Adafruit VL6180x test!");
+  // if (vl.begin()) {
+  //   Serial.println("Found sensor");
+  // } else {
+  //   Serial.println("Sensor not found");
+  // }
 
   Serial.println("Setup Finished");
   digitalWrite(STATUS_PIN, LOW);
@@ -143,8 +143,8 @@ void loop(){
 
   if (EN_STRAIN1 && millis() - strainTimer1 > (STRAIN_INTERVAL - 1)) {
     strainTimer1 = millis();
-    //push the time of flight data to the buffer
-    sheavePos();
+    //Uncomment when this works
+    //sheavePos();
   }
 
   if (EN_STRAIN2 && millis() - strainTimer2 > (STRAIN_INTERVAL - 1)) {
