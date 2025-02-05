@@ -80,7 +80,7 @@ void handleGPS() {
           GPS_minute = GPS.minute;
           GPS_seconds = GPS.seconds;
           getFilename(GPS.hour, GPS.minute, GPS.seconds);
-          getDirectory(GPS.day, GPS.month, GPS.year);
+          getDirectory(GPS.day, GPS.month, GPS.seconds);
           SD.mkdir(directory);
           Serial.println(filename);
           Serial.println(directory);
