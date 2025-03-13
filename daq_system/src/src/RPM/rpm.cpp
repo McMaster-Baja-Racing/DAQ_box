@@ -45,6 +45,7 @@ void rpmCalc() {
         PRIM_stopped = false;
       }
       PRIM_rpm = (PRIM_hall_count / ((PRIM_past_time / 1000000.0) / 60)) / Prim_counts_per_rotation;
+      Serial.println(PRIM_rpm);
       buffPush(RPM_PRIM, (float)PRIM_rpm);
       PRIM_hall_count = 0;
       PRIM_start = micros();
@@ -57,11 +58,13 @@ void rpmCalc() {
 }
 
 void incrementHall_REAR_SPEED() {
-  //Serial.println("Rear Wheel Speed Pin Hit");
+  // Serial.println("Rear Wheel Speed Pin Hit");
   REAR_SPEED_hall_count += 1;
 }
 
+
 void incrementHall_PRIM() {
-  //Serial.println("PRIM RPM Pin Hit");
+  
+  //Serial.println("RPM Pin Hit");
   PRIM_hall_count += 1;
 }

@@ -30,8 +30,8 @@ bool EN_SUS4 = true;
 /***  Pins  ***/
 #define FR_HALL_PIN 2
 #define FL_HALL_PIN 3
-#define REAR_SPEED_HALL_PIN 4
-#define PRIM_HALL_PIN 5
+#define REAR_SPEED_HALL_PIN 16 // Set to temp pin x
+#define PRIM_HALL_PIN 27 // Set to temp pin sec
 
 /***********************************/
 /***  Start of Global variables  ***/

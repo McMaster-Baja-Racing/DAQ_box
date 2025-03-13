@@ -29,8 +29,9 @@ void setup() {
 
   pinMode(FR_HALL_PIN, INPUT_PULLUP);
   pinMode(FL_HALL_PIN, INPUT_PULLUP);
-  pinMode(REAR_SPEED_HALL_PIN, INPUT_PULLUP);
-  pinMode(PRIM_HALL_PIN, INPUT_PULLUP);
+  pinMode(REAR_SPEED_HALL_PIN, INPUT);
+  pinMode(PRIM_HALL_PIN, INPUT);
+
   pinMode(24, INPUT);
   pinMode(25, INPUT);
 
@@ -106,8 +107,10 @@ void setup() {
   delay(1000);
 }
 
-void loop(){
+// add an int for last RPM value
 
+
+void loop(){
   //-------------Debug Function-------------------
   controlDebug(Debug::NONE);
 
