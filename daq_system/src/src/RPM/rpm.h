@@ -26,6 +26,8 @@ extern int PRIM_rpm;
 
 extern float PRIM_hall_count;
 extern float REAR_SPEED_hall_count;
+extern float avgPrimPulse;
+extern float avgRearSpeedPulse;
 
 // Function Declarations
 void rpmCalc();
