@@ -35,7 +35,7 @@ void rpmCalc() {
       avgRearSpeedPulse = avgRearSpeedPulse * 0.9 + (float)REAR_SPEED_past_time * 0.1;
 
       REAR_SPEED_int = (REAR_SPEED_hall_count / ((avgRearSpeedPulse / 1000000.0) / 60)) / Rear_speed_counts_per_rotation;
-      
+      Serial.println(REAR_SPEED_int);
       buffPush(REAR_SPEED, (float)REAR_SPEED_int);
       
       REAR_SPEED_hall_count = 0;
@@ -58,6 +58,8 @@ void rpmCalc() {
       avgPrimPulse = avgPrimPulse * 0.9 + (float)PRIM_past_time * 0.1;
 
       PRIM_rpm = (PRIM_hall_count / ((avgPrimPulse / 1000000.0) / 60)) / Prim_counts_per_rotation;
+
+      //Serial.println(PRIM_rpm);
       
       buffPush(RPM_PRIM, (float)PRIM_rpm);
       
@@ -78,6 +80,6 @@ void incrementHall_REAR_SPEED() {
 }
 
 void incrementHall_PRIM() {
-  //Serial.println("PRIM RPM Pin Hit");
+  // Serial.println("PRIM RPM Pin Hit");
   PRIM_hall_count += 1;
 }

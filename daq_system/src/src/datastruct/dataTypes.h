@@ -48,5 +48,5 @@ enum DataType
   IMU_QUAT_X,
   IMU_QUAT_Y,
   IMU_QUAT_Z,
-  DATATYPE_COUNT
+  DATATYPE_COUNT,
 };

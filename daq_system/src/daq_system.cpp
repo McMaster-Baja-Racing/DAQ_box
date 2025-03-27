@@ -49,15 +49,15 @@ void setup() {
   // If the sensor initializes successfully, the status LED will be green
 
   // Setup IMU
-  if (!bno.begin()) {
-    Serial.println("BNO FAILURE");
-    strip.setPixelColor(0, strip.Color(255, 0, 0));
-  } else {
-    strip.setPixelColor(0, strip.Color(0, 255, 0));
-    Serial.println("BNO SUCCESS");
-  }
-  strip.show();
-  delay(500);
+  // if (!bno.begin()) {
+  //   Serial.println("BNO FAILURE");
+  //   strip.setPixelColor(0, strip.Color(255, 0, 0));
+  // } else {
+  //   strip.setPixelColor(0, strip.Color(0, 255, 0));
+  //   Serial.println("BNO SUCCESS");
+  // }
+  // strip.show();
+  // delay(500);
 
   // SD Card Setup
   if (USE_SD) {
@@ -77,7 +77,7 @@ void setup() {
   }
 
   // Set up Temperature Sensor
-  tempSetup();
+  //tempSetup();
 
   // Set up GPS
   if (!GPS.begin(9600)) {
@@ -93,12 +93,12 @@ void setup() {
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY); // Minimum recommended data
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 10 Hz update rate
 
-  // Serial.println("Adafruit VL6180x test!");
-  // if (vl.begin()) {
-  //   Serial.println("Found sensor");
-  // } else {
-  //   Serial.println("Sensor not found");
-  // }
+  Serial.print("Adafruit VL6180x test: ");
+  if (vl.begin()) {
+    Serial.println("Sensor found!");
+  } else {
+    Serial.println("Sensor not found");
+  }
 
   Serial.println("Setup Finished");
   digitalWrite(STATUS_PIN, LOW);
@@ -112,7 +112,7 @@ void loop(){
   controlDebug(Debug::NONE);
 
   //-------------Temperature Check-------------------
-  readTemp();
+  //readTemp();
 
   //-------------Handle Input Button----------------
   handleInputButton();
@@ -138,13 +138,10 @@ void loop(){
 
   if (EN_IMU && millis() - imuTimer > (IMU_INTERVAL - 1)) {
     imuTimer = millis();
-    imuData();
+    //imuData();
   }
-
   if (EN_STRAIN1 && millis() - strainTimer1 > (STRAIN_INTERVAL - 1)) {
     strainTimer1 = millis();
-    //Uncomment when this works
-    //sheavePos();
   }
 
   if (EN_STRAIN2 && millis() - strainTimer2 > (STRAIN_INTERVAL - 1)) {
@@ -154,7 +151,9 @@ void loop(){
   
   if (EN_SUS1 && millis() - susTimer1 > (SUS_INTERVAL - 1)) {
     susTimer1 = millis();
-    susData1();
+    //Uncomment when this works
+    //sheavePos();
+    //susData1();
   }
 
   if (EN_SUS2 && millis() - susTimer2 > (SUS_INTERVAL - 1)) {
@@ -174,7 +173,7 @@ void loop(){
 
   if (EN_TEMP && millis() - tempTimer > (TEMP_INTERVAL - 1)) {
     tempTimer = millis();
-    tempData();
+    //tempData();
   }
 
   if (SHOW_DEBUG && (millis() - queueSizeTimer > (QUEUE_SIZE_INTERVAL - 1))) {

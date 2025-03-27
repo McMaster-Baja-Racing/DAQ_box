@@ -7,12 +7,13 @@
 bool EN_TEMP = true;  // Uses prim_temp connector on PCB
 bool EN_BRAKE = true;
 bool EN_IMU = true;
-bool EN_STRAIN1 = true; // On for Sheave position
+bool EN_STRAIN1 = false;
 bool EN_STRAIN2 = false;
-bool EN_SUS1 = true;
+bool EN_SUS1 = true; // sheave position
 bool EN_SUS2 = true;
 bool EN_SUS3 = true;
 bool EN_SUS4 = true;
+bool EN_SHEAVE = true;
 
 /***  General  ***/
 // Interval between each data collection point, this is where you set data logging rate
@@ -30,8 +31,8 @@ bool EN_SUS4 = true;
 /***  Pins  ***/
 #define FR_HALL_PIN 2
 #define FL_HALL_PIN 3
-#define REAR_SPEED_HALL_PIN 4
-#define PRIM_HALL_PIN 5
+#define REAR_SPEED_HALL_PIN 26
+#define PRIM_HALL_PIN 27
 
 /***********************************/
 /***  Start of Global variables  ***/
