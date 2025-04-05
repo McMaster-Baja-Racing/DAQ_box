@@ -93,12 +93,12 @@ void setup() {
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY); // Minimum recommended data
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 10 Hz update rate
 
-  Serial.print("Adafruit VL6180x test: ");
-  if (vl.begin()) {
-    Serial.println("Sensor found!");
-  } else {
-    Serial.println("Sensor not found");
-  }
+  //Serial.print("Adafruit VL6180x test: ");
+  //if (vl.begin()) {
+  //  Serial.println("Sensor found!");
+  //} else {
+  //  Serial.println("Sensor not found");
+  //}
 
   Serial.println("Setup Finished");
   digitalWrite(STATUS_PIN, LOW);
@@ -152,6 +152,7 @@ void loop(){
   if (EN_SUS1 && millis() - susTimer1 > (SUS_INTERVAL - 1)) {
     susTimer1 = millis();
     //Uncomment when this works
+    //Serial.println("printing sheave pos");
     //sheavePos();
     //susData1();
   }

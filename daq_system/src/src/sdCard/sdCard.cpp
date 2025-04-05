@@ -65,7 +65,8 @@ void sdSend() {
 
 void buffPush(int id, float tempData) {
   if (!USE_SD && EN_SEROUT) {
-    Serial.print("FL* ID: " + String(DataTypeNames[id]) + " Data: " + String(tempData, 4));
+    float timestamp = (millis() << 6) | id;
+    Serial.println("FL* ID: " + String(DataTypeNames[id]) + " Data: " + String(tempData, 4) + ", Timestamp: " + String(timestamp));
     return;
   }
   // Set the timestamp and type for the data

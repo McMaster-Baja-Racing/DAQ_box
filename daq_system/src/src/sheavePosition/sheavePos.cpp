@@ -10,11 +10,12 @@ uint8_t status;
 
 void sheavePos() {
   range = vl.readRange();
-  status = vl.readRangeStatus();
+  //status = vl.readRangeStatus();
   //Serial.print("Range: "); 
   //Serial.print(range); 
   //Serial.print(" mm  ");
   //Serial.println((unsigned long) (range));
+ // float range = 5;
 
   buffPush(SUS_TRAV_FL, (unsigned long)(range));
 }
