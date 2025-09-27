@@ -35,9 +35,9 @@ void setup() {
   pinMode(25, INPUT);
 
   // Attach the interrupts to hall sensors to count rising edges
-  attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, RISING);
-  attachInterrupt(digitalPinToInterrupt(FL_HALL_PIN), incrementHall_FL, RISING);
-  attachInterrupt(digitalPinToInterrupt(REAR_SPEED_HALL_PIN), incrementHall_REAR_SPEED, RISING);
+  // attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, RISING);
+  // attachInterrupt(digitalPinToInterrupt(FL_HALL_PIN), incrementHall_FL, RISING);
+   attachInterrupt(digitalPinToInterrupt(REAR_SPEED_HALL_PIN), incrementHall_REAR_SPEED, RISING);
   attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), incrementHall_PRIM, RISING);
 
   pinMode(STATUS_PIN, OUTPUT);
@@ -77,7 +77,7 @@ void setup() {
   }
 
   // Set up Temperature Sensor
-  //tempSetup();
+  // tempSetup();
 
   // Set up GPS
   if (!GPS.begin(9600)) {
@@ -124,7 +124,7 @@ void loop(){
   batteryCheck();
 
   //-------------LED Strip---------------------
-  setHUD();
+  // setHUD();
 
   //-------------GPS Data---------------------
   GPS.read();                 
@@ -133,7 +133,7 @@ void loop(){
   if (EN_BRAKE && millis() - brakeTimer > (BRAKE_INTERVAL - 1)) {
     brakeTimer = millis();
     brake_pres = ((((analogRead(17) / 1024.0) * 5.15625) - 0.4) * 1250);
-    buffPush(BRAKE_PRESS, (float)(brake_pres));
+    // buffPush(BRAKE_PRESS, (float)(brake_pres));
   }
 
   if (EN_IMU && millis() - imuTimer > (IMU_INTERVAL - 1)) {
@@ -146,7 +146,7 @@ void loop(){
 
   if (EN_STRAIN2 && millis() - strainTimer2 > (STRAIN_INTERVAL - 1)) {
     strainTimer2 = millis();
-    strainData(3);
+    // strainData(3);
   }
   
   if (EN_SUS1 && millis() - susTimer1 > (SUS_INTERVAL - 1)) {
@@ -159,17 +159,17 @@ void loop(){
 
   if (EN_SUS2 && millis() - susTimer2 > (SUS_INTERVAL - 1)) {
     susTimer2 = millis();
-    susData2();
+    // susData2();
   }
 
   if (EN_SUS3 && millis() - susTimer3 > (SUS_INTERVAL - 1)) {
     susTimer3 = millis();
-    susData3();
+    // susData3();
   }
 
   if (EN_SUS4 && millis() - susTimer4 > (SUS_INTERVAL - 1)) {
     susTimer4 = millis();
-    susData4();
+    // susData4();
   }
 
   if (EN_TEMP && millis() - tempTimer > (TEMP_INTERVAL - 1)) {

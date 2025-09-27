@@ -80,6 +80,6 @@ void incrementHall_REAR_SPEED() {
 }
 
 void incrementHall_PRIM() {
-  //Serial.println("PRIM RPM Pin Hit");
+  // Serial.println("PRIM RPM Pin Hit");
   PRIM_hall_count += 1;
 }
