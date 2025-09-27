@@ -118,11 +118,9 @@ void gpsData(){
 
     // GPS speed is in knots
     gps_speed = GPS.speed * 1.852;
-    Serial.printf("BEFORE BUFF %f", gps_speed);
     buffPush(GPS_SPEED, gps_speed);
     buffPush(GPS_DAYMONTHYEAR, (unsigned long)((GPS.day << 16) + (GPS.month << 8) + (GPS.year)));
     buffPush(GPS_SECONDMINUTEHOUR, (unsigned long)((GPS.seconds << 16) + (GPS.minute << 8) + (GPS.hour)));
-    Serial.printf("AFTER BUFF %f", gps_speed);
 
     if (GPS.minute != GPS_minute) {
       GPS_year = GPS.year;
