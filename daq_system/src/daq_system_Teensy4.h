@@ -3,17 +3,6 @@
 
 /***  Settings  ***/
 
-#define SHOW_DEBUG false
-bool EN_TEMP = true;  // Uses prim_temp connector on PCB
-bool EN_BRAKE = true;
-bool EN_IMU = true;
-bool EN_STRAIN1 = true; // On for Sheave position
-bool EN_STRAIN2 = false;
-bool EN_SUS1 = true; // sheave position
-bool EN_SUS2 = true;
-bool EN_SUS3 = true;
-bool EN_SUS4 = true;
-bool EN_SHEAVE = true;
 
 /***  General  ***/
 // Interval between each data collection point, this is where you set data logging rate
@@ -25,7 +14,6 @@ bool EN_SHEAVE = true;
 #define QUEUE_SIZE_INTERVAL 1000  // For debugging purposes, shows you current queue length on serial moniter
 #define BRAKE_INTERVAL 10
 #define STRAIN_INTERVAL 10
-#define SUS_INTERVAL 10
 #define TEMP_INTERVAL 500
 
 /***  Pins  ***/
@@ -39,17 +27,8 @@ bool EN_SHEAVE = true;
 /***********************************/
 
 //Timers
-unsigned long tempTimer = millis();
 unsigned long queueSizeTimer = millis();
-unsigned long brakeTimer = millis();
-unsigned long imuTimer = millis();
 unsigned long sdTimer = millis();
-unsigned long strainTimer1 = millis();
-unsigned long susTimer1 = millis();
-unsigned long strainTimer2 = millis();
-unsigned long susTimer2 = millis();
-unsigned long susTimer3 = millis();
-unsigned long susTimer4 = millis();
 
 /***  GPS  ***/ 
 bool use_gps = false;

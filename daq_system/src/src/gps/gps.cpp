@@ -4,7 +4,6 @@
 #include <Adafruit_GPS.h>
 #include "../sdCard/sdCard.h"
 #include "../fileInformation/file.h"
-#include "../hud/hud.h"
 #include "../datastruct/dataTypes.h"
 
 // Initializations
@@ -94,38 +93,20 @@ void handleGPS() {
             USE_SD = false;
           }
           gps_flash = true;
-          for (int i = 0; i < LED_COUNT; i++) {
-            strip.setPixelColor(i, strip.Color(0, 255, 0));
-          }
+          
           Serial.println("Fix Found Recording Starting");
           digitalWrite(STATUS_PIN, HIGH);
-          strip.show();
           delay(1000);
           statusLED = true;
         }
       }
-      gps_active = true;
-
-    } else if (EN_GPS) {
-      if (gps_flash == true) {
-        for (int i = 0; i < LED_COUNT; i++) {
-          strip.setPixelColor(i, strip.Color(255, 0, 0));
-        }
-        gps_flash = false;
-      } else {
-        for (int i = 0; i < LED_COUNT; i++) {
-          strip.setPixelColor(i, strip.Color(0, 0, 0));
-        }
-        gps_flash = true;
-      }
-
-      strip.show();
     }
+    gps_active = true;
   }
 }
 
 void gpsData(){
-    if (EN_GPS && gps_timesend && gps_goodmessage && GPS.fix) {
+  if (EN_GPS && gps_timesend && gps_goodmessage && GPS.fix) {
 
     buffPush(GPS_LATITUDE, GPS.latitude);
     buffPush(GPS_LAT, (unsigned long)GPS.lat);
@@ -137,9 +118,12 @@ void gpsData(){
 
     // GPS speed is in knots
     gps_speed = GPS.speed * 1.852;
+    Serial.printf("BEFORE BUFF %f", gps_speed);
     buffPush(GPS_SPEED, gps_speed);
     buffPush(GPS_DAYMONTHYEAR, (unsigned long)((GPS.day << 16) + (GPS.month << 8) + (GPS.year)));
     buffPush(GPS_SECONDMINUTEHOUR, (unsigned long)((GPS.seconds << 16) + (GPS.minute << 8) + (GPS.hour)));
+    Serial.printf("AFTER BUFF %f", gps_speed);
+
     if (GPS.minute != GPS_minute) {
       GPS_year = GPS.year;
       GPS_year = GPS.year;
@@ -149,6 +133,7 @@ void gpsData(){
       GPS_minute = GPS.minute;
       GPS_seconds = GPS.seconds;
     }
+
     gps_timesend = false;
   }
 }

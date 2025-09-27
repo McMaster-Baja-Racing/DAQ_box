@@ -64,7 +64,10 @@ void sdSend() {
 }
 
 void buffPush(int id, float tempData) {
+  Serial.printf("in buffpush in sd card, float");
+  
   if (!USE_SD && EN_SEROUT) {
+    
     float timestamp = (millis() << 6) | id;
     Serial.println("FL* ID: " + String(DataTypeNames[id]) + " Data: " + String(tempData, 4) + ", Timestamp: " + String(timestamp));
     return;
@@ -79,6 +82,8 @@ void buffPush(int id, float tempData) {
 }
 
 void buffPush(int id, unsigned long tempData) {
+    Serial.printf("in buffpush in sd card, long");
+
   if (!USE_SD && EN_SEROUT) {
     Serial.println("UL* ID: " + String(DataTypeNames[id]) + " Data: " + String(tempData));
     return;
