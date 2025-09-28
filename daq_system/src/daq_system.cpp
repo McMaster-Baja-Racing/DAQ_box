@@ -27,16 +27,19 @@ void setup() {
   strip.setBrightness(BRIGHTNESS);
   delay(50);
 
-  pinMode(FR_HALL_PIN, INPUT_PULLUP);
-  pinMode(FL_HALL_PIN, INPUT_PULLUP);
-  pinMode(REAR_SPEED_HALL_PIN, INPUT_PULLUP);
-  pinMode(PRIM_HALL_PIN, INPUT_PULLUP);
+  // pinMode(FR_HALL_PIN, INPUT_PULLUP); // Only use teensy pullups if no hardware pullups are present
+  // pinMode(FL_HALL_PIN, INPUT_PULLUP); // and make sure it matches the use case (no floating values)
+  pinMode(REAR_SPEED_HALL_PIN, INPUT);
+  pinMode(PRIM_HALL_PIN, INPUT);
   pinMode(24, INPUT);
   pinMode(25, INPUT);
 
   // Attach the interrupts to hall sensors to count rising edges
-  attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, RISING);
-  attachInterrupt(digitalPinToInterrupt(FL_HALL_PIN), incrementHall_FL, RISING);
+  // Uncomment when  in use
+
+  // attachInterrupt(digitalPinToInterrupt(FR_HALL_PIN), incrementHall_FR, RISING);
+  // attachInterrupt(digitalPinToInterrupt(FL_HALL_PIN), incrementHall_FL, RISING);
+
   attachInterrupt(digitalPinToInterrupt(REAR_SPEED_HALL_PIN), incrementHall_REAR_SPEED, RISING);
   attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), incrementHall_PRIM, RISING);
 
@@ -76,9 +79,6 @@ void setup() {
     delay(500);
   }
 
-  // Set up Temperature Sensor
-  tempSetup();
-
   // Set up GPS
   if (!GPS.begin(9600)) {
     strip.setPixelColor(2, strip.Color(255, 0, 0));
@@ -93,13 +93,6 @@ void setup() {
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY); // Minimum recommended data
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);  // 10 Hz update rate
 
-  // Serial.println("Adafruit VL6180x test!");
-  // if (vl.begin()) {
-  //   Serial.println("Found sensor");
-  // } else {
-  //   Serial.println("Sensor not found");
-  // }
-
   Serial.println("Setup Finished");
   digitalWrite(STATUS_PIN, LOW);
 
@@ -112,7 +105,7 @@ void loop(){
   controlDebug(Debug::NONE);
 
   //-------------Temperature Check-------------------
-  readTemp();
+  // readTemp();
 
   //-------------Handle Input Button----------------
   handleInputButton();
@@ -133,12 +126,12 @@ void loop(){
   if (EN_BRAKE && millis() - brakeTimer > (BRAKE_INTERVAL - 1)) {
     brakeTimer = millis();
     brake_pres = ((((analogRead(17) / 1024.0) * 5.15625) - 0.4) * 1250);
-    buffPush(BRAKE_PRESS, (float)(brake_pres));
+    // buffPush(BRAKE_PRESS, (float)(brake_pres));
   }
 
   if (EN_IMU && millis() - imuTimer > (IMU_INTERVAL - 1)) {
     imuTimer = millis();
-    imuData();
+    // imuData();
   }
 
   if (EN_STRAIN1 && millis() - strainTimer1 > (STRAIN_INTERVAL - 1)) {
@@ -149,32 +142,32 @@ void loop(){
 
   if (EN_STRAIN2 && millis() - strainTimer2 > (STRAIN_INTERVAL - 1)) {
     strainTimer2 = millis();
-    strainData(3);
+    // strainData(3);
   }
   
   if (EN_SUS1 && millis() - susTimer1 > (SUS_INTERVAL - 1)) {
     susTimer1 = millis();
-    susData1();
+    // susData1();
   }
 
   if (EN_SUS2 && millis() - susTimer2 > (SUS_INTERVAL - 1)) {
     susTimer2 = millis();
-    susData2();
+    // susData2();
   }
 
   if (EN_SUS3 && millis() - susTimer3 > (SUS_INTERVAL - 1)) {
     susTimer3 = millis();
-    susData3();
+    // susData3();
   }
 
   if (EN_SUS4 && millis() - susTimer4 > (SUS_INTERVAL - 1)) {
     susTimer4 = millis();
-    susData4();
+    // susData4();
   }
 
   if (EN_TEMP && millis() - tempTimer > (TEMP_INTERVAL - 1)) {
     tempTimer = millis();
-    tempData();
+    // tempData();
   }
 
   if (SHOW_DEBUG && (millis() - queueSizeTimer > (QUEUE_SIZE_INTERVAL - 1))) {

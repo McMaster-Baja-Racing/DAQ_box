@@ -16,7 +16,7 @@ uint8_t GPS_hour = 1;
 uint8_t GPS_minute = 30; 
 uint8_t GPS_seconds = 25;
 
-uint16_t GPS_year = 2023;
+uint16_t GPS_year = 2025;
 
 uint32_t gpsTimer = millis();
 

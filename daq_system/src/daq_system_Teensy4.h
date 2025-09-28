@@ -4,15 +4,15 @@
 /***  Settings  ***/
 
 #define SHOW_DEBUG false
-bool EN_TEMP = true;  // Uses prim_temp connector on PCB
-bool EN_BRAKE = true;
-bool EN_IMU = true;
-bool EN_STRAIN1 = true; // On for Sheave position
+bool EN_TEMP = false;  // Uses prim_temp connector on PCB
+bool EN_BRAKE = false;
+bool EN_IMU = false;
+bool EN_STRAIN1 = false; // On for Sheave position
 bool EN_STRAIN2 = false;
-bool EN_SUS1 = true;
-bool EN_SUS2 = true;
-bool EN_SUS3 = true;
-bool EN_SUS4 = true;
+bool EN_SUS1 = false;
+bool EN_SUS2 = false;
+bool EN_SUS3 = false;
+bool EN_SUS4 = false;
 
 /***  General  ***/
 // Interval between each data collection point, this is where you set data logging rate
