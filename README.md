@@ -1,4 +1,5 @@
 # DAQ_box
+For a guide, see [this wiki page](http://wiki.mcmasterbaja.ca/en/DAQ/Guides/DAQBOX)
 <!--- 
 One paragraph statement about the project.
 --->
