@@ -57,7 +57,6 @@ void sdSend() {
 
     // Write the remaining data to the SD card (only write valid elements)
     if (counter > 0 && millis() <= (str + 100)) {
-      // write only the valid elements (counter entries)
       bajaData.write((uint8_t*)sdTemp, counter * sizeof(dataStruct));
     }
 
