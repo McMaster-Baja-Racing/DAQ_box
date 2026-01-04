@@ -16,6 +16,8 @@ dataStruct temp;
 
 File bajaData;
 
+unsigned long oldMillis = 0;
+
 // Function Definitions
 void sdSend() {
   if (gps_active) {
@@ -53,9 +55,10 @@ void sdSend() {
       counter++;
     }
 
-    // Write the remaining data to the SD card
-    if (counter != 0 && millis() <= (str + 100)) {
-      bajaData.write((uint8_t*)&sdTemp, sizeof(sdTemp));
+    // Write the remaining data to the SD card (only write valid elements)
+    if (counter > 0 && millis() <= (str + 100)) {
+      // write only the valid elements (counter entries)
+      bajaData.write((uint8_t*)sdTemp, counter * sizeof(dataStruct));
     }
 
     // Flush the data to the SD card
@@ -69,12 +72,25 @@ void buffPush(int id, float tempData) {
     return;
   }
   // Set the timestamp and type for the data
-  temp.timeStamp_typ = (millis() << 6) | id;
+  unsigned long time = millis();
+  temp.timeStamp_typ = (time << 6) | id;
   temp.data_float = tempData;
  
   if (gps_active && !(*savingBuff).push(temp)) {
     Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
   }
+
+  //debugging code to prove that the problem existed in the sdsend
+  /*if (temp.timeStamp_typ > time) {
+    oldMillis = time;
+    //print the time roughly every 10 seconds using modulo or some other trick
+    if (time % 10000 < 50) {
+      Serial.println("Current" + String(time) +  "Prev: " + String(oldMillis) + "(time << 6) | id;" + String(temp.timeStamp_typ) + " ID: " + String(id) + " Data: " + String(tempData, 4));
+    }
+  } else {  
+    Serial.println("Time: " + String(temp.timeStamp_typ) + " ID: " + String(id) + " Data: " + String(tempData, 4));
+  }*/
+
 }
 
 void buffPush(int id, unsigned long tempData) {
@@ -89,4 +105,6 @@ void buffPush(int id, unsigned long tempData) {
   if (gps_active && !(*savingBuff).push(temp)) {
     Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
   }
+
+  //Serial.println("Time: " + String(temp.timeStamp_typ) + " ID: " + String(id) + " Data: " + String(tempData));
 }
