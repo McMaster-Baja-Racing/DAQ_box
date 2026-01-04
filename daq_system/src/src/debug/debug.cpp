@@ -2,7 +2,6 @@
 #include "debug.h"
 #include "../datastruct/dataTypes.h"
 #include "../strainData/strain.h"
-#include "../temperature/temperature.h"
 #include "../suspensionData/sus.h"
 #include "../RPM/rpm.h"
 
@@ -35,10 +34,6 @@ void debug_strain(){
     delay(100);
 }
 
-void debug_temperature(){
-    Serial.print("Temp (C): ");
-    Serial.println(temperature);
-}
 
 void debug_suspension(){
     Serial.print("Sus1: ");
@@ -62,9 +57,6 @@ void controlDebug(Debug mode){
       break;
     case Debug::STRAIN_DEBUG:
       debug_strain();
-      break;
-    case Debug::TEMPERATURE_DEBUG:
-      debug_temperature();
       break;
     case Debug::SUSPENSION_DEBUG:
       debug_suspension();

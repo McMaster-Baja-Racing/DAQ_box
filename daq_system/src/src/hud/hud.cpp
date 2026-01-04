@@ -3,7 +3,6 @@
 #include "hud.h"
 #include "../sdCard/sdCard.h"
 #include "../RPM/rpm.h"
-#include "../temperature/temperature.h"
 #include "../suspensionData/sus.h"
 #include "../gps/gps.h"
 
@@ -51,7 +50,8 @@ void setHUD() {
         //   numLED = map(batPercent, 0, 100, -1, 8);
         //   break;
         case STRAIN:
-          numLED = map(temperature, 0, 150, -1, 8);
+          // Placeholder until strain data is available
+          numLED = map(0, 0, 1000, -1, 8);
           break;
         case SUS1:
           numLED = map(sus1, 140, 310, -1, 8);

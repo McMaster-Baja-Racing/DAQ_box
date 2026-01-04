@@ -9,7 +9,6 @@
 #include "src/suspensionData/sus.h"
 #include "src/strainData/strain.h"
 #include "src/counters/counters.h"
-#include "src/temperature/temperature.h"
 #include "src/battery/battery.h"
 #include "src/RPM/rpm.h"
 #include "src/debug/debug.h"
@@ -27,8 +26,6 @@ void setup() {
   strip.setBrightness(BRIGHTNESS);
   delay(50);
 
-  // pinMode(FR_HALL_PIN, INPUT_PULLUP); // Only use teensy pullups if no hardware pullups are present
-  // pinMode(FL_HALL_PIN, INPUT_PULLUP); // and make sure it matches the use case (no floating values)
   pinMode(REAR_SPEED_HALL_PIN, INPUT);
   pinMode(PRIM_HALL_PIN, INPUT);
   pinMode(24, INPUT);
@@ -103,9 +100,6 @@ void loop(){
 
   //-------------Debug Function-------------------
   controlDebug(Debug::NONE);
-
-  //-------------Temperature Check-------------------
-  // readTemp();
 
   //-------------Handle Input Button----------------
   handleInputButton();
