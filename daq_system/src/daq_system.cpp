@@ -61,8 +61,19 @@ void setup() {
 
   // SD Card Setup
   if (USE_SD) {
- 
-    if (!SD.begin(chipSelect)) {
+
+    if (EN_FAST_SD) {
+      //note, DMA_SDIO was slower, but might be useful in the future
+      if (!SD.sdfs.begin(SdioConfig(FIFO_SDIO))) {
+        Serial.println("SD using FIFO failed, falling back to slow SD");
+        EN_FAST_SD = false;
+      } else {
+        Serial.println("SD using DMA");
+        SdFile::dateTimeCallback(dateTime);
+        Serial.println("CARD SUCCESS");
+        //EN_FAST_SD = false; // Disable fast SD for now due to stability issues
+      }
+    } else if (!SD.begin(chipSelect)) {
       Serial.println("Card failed, or not present");
       strip.setPixelColor(1, strip.Color(255, 0, 0));
       strip.show();

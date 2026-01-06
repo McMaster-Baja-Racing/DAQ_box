@@ -86,7 +86,6 @@ void dateTime(uint16_t* date, uint16_t* time) {
   *date = FAT_DATE(year, month, day);
   // Return time using FAT_TIME macro to format fields
   *time = FAT_TIME(hour, minute, second);
-  Serial.println("DateTime set to: " + String(year) + "-" + String(month) + "-" + String(day) + " " + String(hour) + ":" + String(minute) + ":" + String(second));
 }
 
 void gpsMessage(){

@@ -49,10 +49,18 @@ void handleInputButton() {
         strcat(fileDir, filename);
         Serial.println(fileDir);
 
-        bajaData = SD.open(fileDir, FILE_WRITE);
-        if (bajaData == 0) {
-          Serial.println("File failed to write");
-          USE_SD = false;
+        if (EN_FAST_SD) {
+          bajaDataFast.open(&SD.sdfs, fileDir, O_RDWR | O_CREAT | O_AT_END);
+          if (!bajaDataFast) {
+            Serial.println("File failed to write");
+            USE_SD = false;
+          }
+        } else {
+          bajaData = SD.open(fileDir, FILE_WRITE);
+          if (bajaData == 0) {
+            Serial.println("File failed to write");
+            USE_SD = false;
+          }
         }
 
         // File header example

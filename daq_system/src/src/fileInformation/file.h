@@ -12,6 +12,8 @@ extern char fileDir[];
 extern Bounce inputButton;
 extern int lastPressed;
 
+extern bool EN_FAST_SD;
+
 // Function Declarations
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second);
 void getDirectory(uint8_t day, uint8_t month, uint8_t year);
