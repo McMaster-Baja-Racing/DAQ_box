@@ -7,6 +7,7 @@
 #include "../hud/hud.h"
 #include "../datastruct/dataTypes.h"
 
+
 // Initializations
 Adafruit_GPS GPS = Adafruit_GPS(&GPSSerial);
 
@@ -27,6 +28,35 @@ bool EN_GPS = true;
 
 float gps_speed = 0;
 
+void timezoneAdjust(uint16_t &year, uint8_t &month, uint8_t &day, uint8_t &hour) {
+    // Make a signed copy for calculation
+    int16_t signedHour = (int16_t)hour;  
+    signedHour += TIMEZONE_OFFSET; // negative offsets are safe now
+
+    // Days in each month
+    uint8_t daysInMonth[] = {31,28,31,30,31,30,31,31,30,31,30,31};
+    if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) daysInMonth[1] = 29;
+
+    // Backward rollover only (hour < 0 → previous day)
+    while (signedHour < 0) {
+        signedHour += 24;
+        day--;
+    }
+
+    // Handle day < 1 → previous month/year
+    while (day < 1) {
+        month--;
+        if (month < 1) {
+            month = 12;
+            year--;
+        }
+        day += daysInMonth[month-1];
+    }
+
+    // Write the adjusted hour back to the original unsigned variable
+    hour = (uint8_t)signedHour;
+}
+
 // Function Definitions
 void dateTime(uint16_t* date, uint16_t* time) {
 
@@ -34,12 +64,16 @@ void dateTime(uint16_t* date, uint16_t* time) {
   uint8_t month, day, hour, minute, second;
 
   if (GPS.fix) {
-    year = GPS_year;
+    // Return date using FAT_DATE macro to format fields
+  //GPS year is returned as the last 2 digits only, I wonder how long this has been a bug lol
+    year = GPS_year + 2000;
     month = GPS_month;
     day = GPS_day;
     hour = GPS_hour;
     minute = GPS_minute;
     second = GPS_seconds;
+
+    timezoneAdjust(year, month, day, hour);
   } else {
     year = 2030;
     month = 3;
@@ -48,10 +82,11 @@ void dateTime(uint16_t* date, uint16_t* time) {
     minute = 2;
     second = 50;
   }
-  // Return date using FAT_DATE macro to format fields
+  
   *date = FAT_DATE(year, month, day);
   // Return time using FAT_TIME macro to format fields
   *time = FAT_TIME(hour, minute, second);
+  Serial.println("DateTime set to: " + String(year) + "-" + String(month) + "-" + String(day) + " " + String(hour) + ":" + String(minute) + ":" + String(second));
 }
 
 void gpsMessage(){
@@ -87,11 +122,22 @@ void handleGPS() {
           strcpy(fileDir, directory);
           strcat(fileDir, filename);
           Serial.println(fileDir);
-          bajaData = SD.open(fileDir, FILE_WRITE);  // Create file
-          if (bajaData == 0) {
-            Serial.println("File failed to write");
-            // don't do anything more:
-            USE_SD = false;
+
+          if(EN_FAST_SD) {
+            bajaDataFast.open(fileDir, O_RDWR | O_CREAT | O_AT_END);  // Create file
+            if (!bajaDataFast) {
+              Serial.println("File failed to write");
+              // don't do anything more:
+              USE_SD = false;
+            }
+            bajaDataFast.sync();
+          } else {
+            bajaData = SD.open(fileDir, FILE_WRITE);  // Create file
+            if (bajaData == 0) {
+              Serial.println("File failed to write");
+              // don't do anything more:
+              USE_SD = false;
+            }
           }
           gps_flash = true;
           for (int i = 0; i < LED_COUNT; i++) {

@@ -9,6 +9,7 @@
 
 // Declarations
 extern Adafruit_GPS GPS;
+extern int8_t TIMEZONE_OFFSET;
 
 extern uint8_t GPS_month;
 extern uint8_t GPS_day;
@@ -28,6 +29,8 @@ extern bool EN_GPS;
 extern float gps_speed;
 
 // Function Declarations
+void timezoneAdjust(uint16_t &year, uint8_t &month, uint8_t &day, uint8_t &hour);
+
 void dateTime(uint16_t* date, uint16_t* time);
 
 void gpsMessage();
