@@ -106,15 +106,18 @@ void handleGPS() {
     if (GPS.fix) {
       if (USE_SD) {
         if (gps_active == false) {
-          GPS_year = GPS.year;
+          GPS_year = GPS.year + 2000;
           GPS_year = GPS.year;
           GPS_month = GPS.month;
           GPS_day = GPS.day;
           GPS_hour = GPS.hour;
           GPS_minute = GPS.minute;
           GPS_seconds = GPS.seconds;
-          getFilename(GPS.hour, GPS.minute, GPS.seconds);
-          getDirectory(GPS.day, GPS.month, GPS.year);
+          timezoneAdjust(GPS_year, GPS_month, GPS_day, GPS_hour);
+
+          getFilename(GPS_hour, GPS_minute, GPS_seconds);
+          getDirectory(GPS_day, GPS_month, GPS_year);
+          
           SD.mkdir(directory);
           Serial.println(filename);
           Serial.println(directory);
