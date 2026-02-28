@@ -2,7 +2,7 @@
 #include <Bounce.h>
 
 // Definitions
-#define BUTT_PIN 29
+#define BUTT_PIN 32
 
 // Declarations
 extern char filename[];

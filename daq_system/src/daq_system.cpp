@@ -88,7 +88,7 @@ void setup() {
   }
 
   // Set up GPS
-  if (!GPS.begin(9600)) {
+  if (!GPS.begin(38400)) {
     strip.setPixelColor(2, strip.Color(255, 0, 0));
     Serial.println("GPS failed, or not present");
     use_gps = false;

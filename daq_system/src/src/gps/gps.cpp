@@ -7,6 +7,11 @@
 #include "../hud/hud.h"
 #include "../datastruct/dataTypes.h"
 
+#include <SparkFun_u-blox_GNSS_Arduino_Library.h> //http://librarymanager/All#SparkFun_u-blox_GNSS
+SFE_UBLOX_GNSS myGNSS;
+//serial pins on 7/8
+
+
 
 // Initializations
 Adafruit_GPS GPS = Adafruit_GPS(&GPSSerial);
@@ -24,7 +29,7 @@ uint32_t gpsTimer = millis();
 bool gps_goodmessage = false;
 bool gps_timesend = false;
 bool gps_flash = true;
-bool EN_GPS = true;
+bool EN_GPS = false;
 
 float gps_speed = 0;
 
@@ -205,4 +210,8 @@ void gps(){
   gpsMessage();
   handleGPS();
   gpsData();
+}
+
+void gps_new(){
+  //hardware arduino serial
 }
