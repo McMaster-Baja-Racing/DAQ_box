@@ -37,7 +37,8 @@ void handleInputButton() {
     } else {
 
       if (millis() - lastPressed < 250) {
-        Serial.println("Start recording"); 
+        Serial.println("Start recording");
+        //strip.setPixelColor(0, strip.Color(100, 100, 100));
         EN_GPS = false;
         gps_active = true;
 

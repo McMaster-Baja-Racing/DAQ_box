@@ -51,9 +51,9 @@ void setup() {
   // Setup IMU
   if (!bno.begin()) {
     Serial.println("BNO FAILURE");
-    strip.setPixelColor(0, strip.Color(255, 0, 0));
+    //strip.setPixelColor(0, strip.Color(255, 0, 0));
   } else {
-    strip.setPixelColor(0, strip.Color(0, 255, 0));
+    //strip.setPixelColor(0, strip.Color(0, 255, 0));
     Serial.println("BNO SUCCESS");
   }
   strip.show();
@@ -71,29 +71,30 @@ void setup() {
         Serial.println("SD using DMA");
         SdFile::dateTimeCallback(dateTime);
         Serial.println("CARD SUCCESS");
+        //strip.setPixelColor(1, strip.Color(0, 255, 0));
         //EN_FAST_SD = false; // Disable fast SD for now due to stability issues
       }
     } else if (!SD.begin(chipSelect)) {
       Serial.println("Card failed, or not present");
-      strip.setPixelColor(1, strip.Color(255, 0, 0));
+     //strip.setPixelColor(1, strip.Color(100, 0, 0));
       strip.show();
       USE_SD = false;
     } else {
       SdFile::dateTimeCallback(dateTime);
       Serial.println("CARD SUCCESS");
-      strip.setPixelColor(1, strip.Color(0, 255, 0));
+      //strip.setPixelColor(1, strip.Color(0, 100, 0));
     }
     strip.show();
     delay(500);
   }
 
   // Set up GPS
+  //strip.setPixelColor(0, strip.Color(50, 0, 50));
   if (!GPS.begin(38400)) {
-    strip.setPixelColor(2, strip.Color(255, 0, 0));
     Serial.println("GPS failed, or not present");
     use_gps = false;
   } else {
-    strip.setPixelColor(2, strip.Color(0, 255, 0));
+    //strip.setPixelColor(0, strip.Color(0, 30, 0));
     Serial.println("GPS SUCCESS");
   }
   strip.show();
@@ -103,6 +104,7 @@ void setup() {
 
   Serial.println("Setup Finished");
   digitalWrite(STATUS_PIN, LOW);
+  //strip.setPixelColor(0, strip.Color(0, 255, 255));
 
   delay(1000);
 }

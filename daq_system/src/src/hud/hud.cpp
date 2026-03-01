@@ -12,7 +12,7 @@ Adafruit_NeoPixel strip(LED_COUNT, HUD_PIN, NEO_GRB + NEO_KHZ800);
 int HUD_SHOW = BRAKE;
 int brake_pres = 0.0;
 
-bool EN_HUD = true;
+bool EN_HUD = false;
 
 unsigned long ledTimer = millis();
 
