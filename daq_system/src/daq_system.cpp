@@ -22,8 +22,8 @@ void setup() {
 
   // Set up LED Strip
   strip.begin();
-  strip.show();
   strip.setBrightness(BRIGHTNESS);
+  strip.show();
   delay(50);
 
   pinMode(REAR_SPEED_HALL_PIN, INPUT);
@@ -51,9 +51,7 @@ void setup() {
   // Setup IMU
   if (!bno.begin()) {
     Serial.println("BNO FAILURE");
-    //strip.setPixelColor(0, strip.Color(255, 0, 0));
   } else {
-    //strip.setPixelColor(0, strip.Color(0, 255, 0));
     Serial.println("BNO SUCCESS");
   }
   strip.show();
@@ -89,13 +87,15 @@ void setup() {
   }
 
   // Set up GPS
-  //strip.setPixelColor(0, strip.Color(50, 0, 50));
+  strip.setPixelColor(0, strip.Color(50, 0, 0));
+  strip.show();
   if (!GPS.begin(38400)) {
     Serial.println("GPS failed, or not present");
     use_gps = false;
   } else {
     //strip.setPixelColor(0, strip.Color(0, 30, 0));
     Serial.println("GPS SUCCESS");
+    strip.setPixelColor(3, strip.Color(90, 195, 0));
   }
   strip.show();
 

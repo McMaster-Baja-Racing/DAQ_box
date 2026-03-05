@@ -147,13 +147,16 @@ void handleGPS() {
             }
           }
           gps_flash = true;
-          /*for (int i = 0; i < LED_COUNT; i++) {
+          for (int i = 0; i < LED_COUNT; i++) {
             strip.setPixelColor(i, strip.Color(0, 255, 0));
-          }*/
+          }
           Serial.println("Fix Found Recording Starting");
           digitalWrite(STATUS_PIN, HIGH);
-          //instead of status pin, use the 0 led on the neopixel strip
-          //strip.setPixelColor(0, strip.Color(0, 25, 0));
+          //instead of status pin, use the 2/3 led on the neopixel strip
+          strip.setPixelColor(0, strip.Color(0, 0, 0));
+          strip.setPixelColor(1, strip.Color(0, 0, 0));
+          strip.setPixelColor(2, strip.Color(0, 0, 0));
+          strip.setPixelColor(3, strip.Color(255, 0, 0));
           strip.show();
           delay(1000);
           statusLED = true;
