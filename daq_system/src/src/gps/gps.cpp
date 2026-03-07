@@ -105,19 +105,22 @@ void gpsMessage(){
 
 // TODO: Cleanup this function
 void handleGPS() {
-  if (millis() - gpsTimer > (GPS_INTERVAL - 1)) {
+  // if (millis() - gpsTimer > (GPS_INTERVAL - 1)) {
+  if (true) {
     gpsTimer = millis();
     gps_timesend = true;
-    if (GPS.fix) {
+    // if (GPS.fix) {
+    if(true) {
       if (USE_SD) {
         if (gps_active == false) {
-          GPS_year = GPS.year + 2000;
-          GPS_year = GPS.year;
-          GPS_month = GPS.month;
-          GPS_day = GPS.day;
-          GPS_hour = GPS.hour;
-          GPS_minute = GPS.minute;
-          GPS_seconds = GPS.seconds;
+          Serial.println("Creating filename:");
+          GPS_year = 2000;
+          // GPS_year = GPS.year;
+          GPS_month = 1;
+          GPS_day = 1;
+          GPS_hour = 1;
+          GPS_minute = 1;
+          GPS_seconds = 1;
           timezoneAdjust(GPS_year, GPS_month, GPS_day, GPS_hour);
 
           getFilename(GPS_hour, GPS_minute, GPS_seconds);

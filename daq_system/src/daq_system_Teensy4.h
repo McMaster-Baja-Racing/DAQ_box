@@ -3,7 +3,7 @@
 
 /***  Settings  ***/
 
-#define SHOW_DEBUG false
+#define SHOW_DEBUG true
 bool EN_TEMP = false;  // Uses prim_temp connector on PCB
 bool EN_BRAKE = false;
 bool EN_IMU = false;

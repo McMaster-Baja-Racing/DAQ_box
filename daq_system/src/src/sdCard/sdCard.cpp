@@ -28,7 +28,8 @@ static unsigned long statsMillis = 0;
 
 // Function Definitions
 void sdSend() {
-  if (gps_active) {
+  // if (gps_active) {
+  if(true) {
     // swap the buffers to load the data to the SD card
     if (savingBuff == &buff1) {
       savingBuff = &buff2;
@@ -143,7 +144,7 @@ void buffPush(int id, float tempData) {
   temp.timeStamp_typ = (time << 6) | id;
   temp.data_float = tempData;
  
-  if (gps_active && !(*savingBuff).push(temp)) {
+  if (!(*savingBuff).push(temp)) {
     Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
   }
 
@@ -169,7 +170,7 @@ void buffPush(int id, unsigned long tempData) {
   temp.timeStamp_typ = (millis() << 6) | id;
   temp.data_long = tempData;
 
-  if (gps_active && !(*savingBuff).push(temp)) {
+  if (!(*savingBuff).push(temp)) {
     Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
   }
 
