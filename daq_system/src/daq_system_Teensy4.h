@@ -51,7 +51,8 @@ unsigned long susTimer3 = millis();
 unsigned long susTimer4 = millis();
 
 /***  GPS  ***/ 
-bool use_gps = false;
+//hmm
+//bool use_gps = false;
 
 const int chipSelect = BUILTIN_SDCARD;
 

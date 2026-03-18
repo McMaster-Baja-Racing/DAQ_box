@@ -36,7 +36,7 @@ void handleInputButton() {
       Serial.print(HUD_SHOW);
     } else {
 
-      if (millis() - lastPressed < 250) {
+      if (millis() - lastPressed < 250) { //we dont actually need this anymore bc ive already set gps_active to true in setup() in main.cpp but it can stay.
         Serial.println("Start recording");
         strip.setPixelColor(2, strip.Color(100, 0, 100));
         EN_GPS = false;

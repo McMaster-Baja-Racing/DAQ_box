@@ -13,6 +13,9 @@ void setup() {
 
     Serial.println("Setup Starting");
 
+
+ 
+
     // Set up LED Strip
     strip.begin();
     strip.setBrightness(BRIGHTNESS);
@@ -37,6 +40,24 @@ void setup() {
 
     strip.show();
     // delay(500);
+
+       //new gps setup using ublox:
+    GPSSerial.begin(38400); //defaults to 38400 on uart
+    if(!myGNSS.begin(GPSSerial)){
+        strip.setPixelColor(2, strip.Color(255, 0, 0));
+        Serial.println("GPS failed or not present");
+        use_gps = false; //is false by default in daq_system_Teensy4.h but idk.
+
+    } else {
+        strip.setPixelColor(2, strip.Color(0, 255, 0));
+        Serial.println("GPS detected");
+        myGNSS.setUART1Output(COM_TYPE_UBX); // Set the UART port to output UBX only, no nmea noise (was a problem maybe?)
+        myGNSS.setNavigationFrequency(10); // the gps runs 10hz
+        myGNSS.saveConfiguration(); // Save the current settings to flash and BBR
+
+        use_gps = true;
+
+    }
 
     // SD Card Setup
     if (USE_SD) {
@@ -64,6 +85,8 @@ void setup() {
         strip.show();
         delay(500);
     }
+
+    SdFile::dateTimeCallback(dateTime); 
 
     Serial.println("Setup Finished");
     digitalWrite(STATUS_PIN, LOW);
@@ -105,10 +128,17 @@ void setup() {
         }
     }
 
+    gps_active = true; //forces a dummy file name always even if the gps off
     delay(1000);
 }
 
 void loop() {
+    //-------------GPS-------------------
+    if (use_gps) {
+        gps();
+    }
+
+
     controlDebug(Debug::RPM_DEBUG);
     //-------------RPM Calculations-------------------
     rpmCalc();
