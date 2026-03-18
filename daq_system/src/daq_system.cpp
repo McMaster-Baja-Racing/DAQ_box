@@ -7,6 +7,9 @@
 #include "src/hud/hud.h"
 #include "src/sdCard/sdCard.h"
 #include "src/fileInformation/file.h"
+#include "src/gps/gps.h"
+
+
 
 void setup() {
     Serial.begin(115200);
