@@ -120,32 +120,6 @@ void handleGPS() {
           GPS_seconds = GPS.seconds;
           timezoneAdjust(GPS_year, GPS_month, GPS_day, GPS_hour);
 
-          getFilename(GPS_hour, GPS_minute, GPS_seconds);
-          getDirectory(GPS_day, GPS_month, GPS_year);
-          
-          SD.mkdir(directory);
-          Serial.println(filename);
-          Serial.println(directory);
-          strcpy(fileDir, directory);
-          strcat(fileDir, filename);
-          Serial.println(fileDir);
-
-          if(EN_FAST_SD) {
-            bajaDataFast.open(fileDir, O_RDWR | O_CREAT | O_AT_END);  // Create file
-            if (!bajaDataFast) {
-              Serial.println("File failed to write");
-              // don't do anything more:
-              USE_SD = false;
-            }
-            bajaDataFast.sync();
-          } else {
-            bajaData = SD.open(fileDir, FILE_WRITE);  // Create file
-            if (bajaData == 0) {
-              Serial.println("File failed to write");
-              // don't do anything more:
-              USE_SD = false;
-            }
-          }
           gps_flash = true;
           for (int i = 0; i < LED_COUNT; i++) {
             strip.setPixelColor(i, strip.Color(0, 255, 0));

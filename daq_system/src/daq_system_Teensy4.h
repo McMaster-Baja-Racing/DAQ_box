@@ -27,6 +27,9 @@ bool EN_SUS4 = false;
 #define SUS_INTERVAL 5
 #define TEMP_INTERVAL 500
 
+// Time until the program stops waiting for GPS fix and writes to default filename
+#define GPS_TIMEOUT_MILLIS (20 * 1000)
+
 /***  Pins  ***/
 #define FR_HALL_PIN 2
 #define FL_HALL_PIN 3
@@ -49,9 +52,6 @@ unsigned long strainTimer2 = millis();
 unsigned long susTimer2 = millis();
 unsigned long susTimer3 = millis();
 unsigned long susTimer4 = millis();
-
-/***  GPS  ***/ 
-bool use_gps = false;
 
 const int chipSelect = BUILTIN_SDCARD;
 

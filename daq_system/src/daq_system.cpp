@@ -91,7 +91,6 @@ void setup() {
   strip.show();
   if (!GPS.begin(38400)) {
     Serial.println("GPS failed, or not present");
-    use_gps = false;
   } else {
     //strip.setPixelColor(0, strip.Color(0, 30, 0));
     Serial.println("GPS SUCCESS");
@@ -175,6 +174,19 @@ void loop(){
   if (EN_TEMP && millis() - tempTimer > (TEMP_INTERVAL - 1)) {
     tempTimer = millis();
     // tempData();
+  }
+
+  // If we are using SD card but haven't created the data file yet
+  if(USE_SD && !(bajaDataFast || bajaData))
+  {
+    // If the GPS timeout has been reached
+    if(!gps_active && millis() > GPS_TIMEOUT_MILLIS)
+    {
+      createSequentialFile();
+    }
+    else{
+      createDateTimeFile(GPS_day, GPS_month, GPS_year, GPS_hour, GPS_minute, GPS_seconds);
+    }
   }
 
   if (SHOW_DEBUG && (millis() - queueSizeTimer > (QUEUE_SIZE_INTERVAL - 1))) {
