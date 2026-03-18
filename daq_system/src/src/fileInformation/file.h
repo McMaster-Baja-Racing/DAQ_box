@@ -15,8 +15,8 @@ extern bool EN_FAST_SD;
 
 // Function Declarations
 void getFilename(uint8_t hour, uint8_t minute, uint8_t second);
-void getDirectory(uint8_t day, uint8_t month, uint8_t year);
+void getDirectory(uint8_t day, uint8_t month, uint16_t year);
 void handleInputButton();
 void createFile();
 void createSequentialFile();
-void createDateTimeFile(uint8_t day, uint8_t month, uint8_t year, uint8_t hour, uint8_t minute, uint8_t second );
+void createDateTimeFile(uint8_t day, uint8_t month, uint16_t year, uint8_t hour, uint8_t minute, uint8_t second );
