@@ -167,8 +167,8 @@ void gpsData(){
 
     buffPush(GPS_ANGLE, GPS.angle);
 
-    // GPS speed is in knots
-    gps_speed = GPS.speed * 1.852;
+    // GPS speed is in mm/s, convert to km/h
+    gps_speed = GPS.speed * 0.0036;
     buffPush(GPS_SPEED, gps_speed);
     buffPush(GPS_DAYMONTHYEAR, (unsigned long)((GPS.day << 16) + (GPS.month << 8) + (GPS.year)));
     buffPush(GPS_SECONDMINUTEHOUR, (unsigned long)((GPS.seconds << 16) + (GPS.minute << 8) + (GPS.hour)));

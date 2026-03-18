@@ -58,4 +58,4 @@ const int chipSelect = BUILTIN_SDCARD;
 bool EN_FAST_SD = true;
 
 //Timezone
-int8_t TIMEZONE_OFFSET = -5; //UTC -5 for EST
+int8_t TIMEZONE_OFFSET = -4; //UTC -4 for EDT
