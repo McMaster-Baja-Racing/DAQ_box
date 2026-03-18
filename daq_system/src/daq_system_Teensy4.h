@@ -28,7 +28,7 @@ bool EN_SUS4 = false;
 #define TEMP_INTERVAL 500
 
 // Time until the program stops waiting for GPS fix and writes to default filename
-#define GPS_TIMEOUT_MILLIS (20 * 1000)
+#define GPS_TIMEOUT_MILLIS (15 * 1000)
 
 /***  Pins  ***/
 #define FR_HALL_PIN 2

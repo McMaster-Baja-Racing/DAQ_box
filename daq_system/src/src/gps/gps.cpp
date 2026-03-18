@@ -29,7 +29,7 @@ uint32_t gpsTimer = millis();
 bool gps_goodmessage = false;
 bool gps_timesend = false;
 bool gps_flash = true;
-bool EN_GPS = false;
+bool EN_GPS = true;
 bool gps_active = false;
 
 float gps_speed = 0;
@@ -71,7 +71,7 @@ void dateTime(uint16_t* date, uint16_t* time) {
 
   if (GPS.fix) {
     // Return date using FAT_DATE macro to format fields
-  //GPS year is returned as the last 2 digits only, I wonder how long this has been a bug lol
+    //GPS year is returned as the last 2 digits only, I wonder how long this has been a bug lol
     year = GPS_year + 2000;
     month = GPS_month;
     day = GPS_day;
@@ -125,7 +125,7 @@ void handleGPS() {
           for (int i = 0; i < LED_COUNT; i++) {
             strip.setPixelColor(i, strip.Color(0, 255, 0));
           }
-          Serial.println("Fix Found Recording Starting");
+          Serial.println("GPS fix found");
           digitalWrite(STATUS_PIN, HIGH);
           //instead of status pin, use the 2/3 led on the neopixel strip
           strip.setPixelColor(0, strip.Color(0, 0, 0));
@@ -159,7 +159,6 @@ void handleGPS() {
 
 void gpsData(){
     if (EN_GPS && gps_timesend && gps_goodmessage && GPS.fix) {
-
     buffPush(GPS_LATITUDE, GPS.latitude);
     buffPush(GPS_LAT, (unsigned long)GPS.lat);
 

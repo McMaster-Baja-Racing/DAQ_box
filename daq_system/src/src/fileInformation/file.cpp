@@ -30,10 +30,12 @@ void getDirectory(uint8_t day, uint8_t month, uint8_t year) {
  * Creates the file at the path stored in fileDir
  */
 void createFile() {
+    Serial.println(fileDir);
     if (EN_FAST_SD) {
         bajaDataFast.open(fileDir, O_RDWR | O_CREAT | O_AT_END);  // Create file
         if (!bajaDataFast) {
             Serial.println("File failed to write");
+            Serial.println(bajaDataFast.getError());
             USE_SD = false;
         }
         bajaDataFast.sync();
@@ -51,7 +53,9 @@ void createFile() {
  * 00000001, 00000002, etc.
  */
 void createSequentialFile() {
-    // Find the next unused filename in the current directory.
+    getDirectory(0, 0, 0);
+    SD.mkdir(directory);
+    // Find the next unused filename in the 0 0 0 directory.
     for (unsigned long i = 0; i < MAX_FILENAME; ++i) {
         snprintf(filename, sizeof(filename), "/%08lu.bin", i);
         strcpy(fileDir, directory);
@@ -76,7 +80,6 @@ void createDateTimeFile(uint8_t day, uint8_t month, uint8_t year, uint8_t hour,
     Serial.println(directory);
     strcpy(fileDir, directory);
     strcat(fileDir, filename);
-    Serial.println(fileDir);
     createFile();
 }
 

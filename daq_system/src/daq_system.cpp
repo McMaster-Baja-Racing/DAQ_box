@@ -182,9 +182,11 @@ void loop(){
     // If the GPS timeout has been reached
     if(!gps_active && millis() > GPS_TIMEOUT_MILLIS)
     {
+      Serial.println("GPS Timed out, creating sequential file");
       createSequentialFile();
     }
-    else{
+    else if(gps_active) {
+      Serial.println("GPS Acquired, creating datetime file");
       createDateTimeFile(GPS_day, GPS_month, GPS_year, GPS_hour, GPS_minute, GPS_seconds);
     }
   }
