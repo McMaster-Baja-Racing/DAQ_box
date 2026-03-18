@@ -3,7 +3,6 @@
 #include "../datastruct/dataTypeNames.h"
 
 // Initializations
-bool gps_active = false;
 bool statusLED = 0;
 bool EN_SEROUT= false;
 bool USE_SD = true;
@@ -28,7 +27,8 @@ static unsigned long statsMillis = 0;
 
 // Function Definitions
 void sdSend() {
-  if (gps_active) {
+  // If the file is open in one of our readers (fast/slow)
+  if (bajaDataFast || bajaData) {
     // swap the buffers to load the data to the SD card
     if (savingBuff == &buff1) {
       savingBuff = &buff2;
@@ -87,7 +87,6 @@ void sdSend() {
         unsigned long dt = micros() - t0;
         writeCountSlow++; totalWriteSlow += dt; if (dt > maxWriteSlow) maxWriteSlow = dt;
       }
-      
     }
     //sync every minute, otherwise flush, only if fast is enabled, otherwise use fallback flush
     if (EN_FAST_SD) {
@@ -143,7 +142,8 @@ void buffPush(int id, float tempData) {
   temp.timeStamp_typ = (time << 6) | id;
   temp.data_float = tempData;
  
-  if (gps_active && !(*savingBuff).push(temp)) {
+  // If the file is open for writing, attempt to push to the buffer and error if it is unsuccessful
+  if ((bajaDataFast || bajaData) && !(*savingBuff).push(temp)) {
     Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
   }
 
@@ -169,7 +169,8 @@ void buffPush(int id, unsigned long tempData) {
   temp.timeStamp_typ = (millis() << 6) | id;
   temp.data_long = tempData;
 
-  if (gps_active && !(*savingBuff).push(temp)) {
+  // If the file is open for writing, attempt to push to the buffer and error if it is unsuccessful
+  if ((bajaDataFast || bajaData) && !(*savingBuff).push(temp)) {
     Serial.println("Lost Data; savingBuff Size = " + String((*savingBuff).size()) + "; sdBuff Size = " + String((*sdBuff).size()));
   }
 

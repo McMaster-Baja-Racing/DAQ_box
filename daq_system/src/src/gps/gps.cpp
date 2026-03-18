@@ -30,6 +30,7 @@ bool gps_goodmessage = false;
 bool gps_timesend = false;
 bool gps_flash = true;
 bool EN_GPS = false;
+bool gps_active = false;
 
 float gps_speed = 0;
 
