@@ -2,9 +2,7 @@
 #include <SD.h>
 
 /***  Settings  ***/
-
 #define SHOW_DEBUG false
-#define ENABLE_PROFILING true
 bool EN_TEMP = false;  // Uses prim_temp connector on PCB
 bool EN_BRAKE = false;
 bool EN_IMU = false;

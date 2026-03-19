@@ -9,6 +9,7 @@
 #include "src/hud/hud.h"
 #include "src/sdCard/sdCard.h"
 #include "src/statusLED/statusLED.h"
+#include "src/config.h"
 
 void setup() {
     Serial.begin(115200);
