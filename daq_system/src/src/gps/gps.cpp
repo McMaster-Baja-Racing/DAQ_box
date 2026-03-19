@@ -178,6 +178,8 @@ void gpsData(){
 }
 
 void gps(){
+    //try saving gps day month hour sec & fixtype etc as ints. 
+    //then call the handlegps() and gpsdata() with those ints instead of recalling them in each handle + gpsdata call.
   myGNSS.checkUblox(); // Continuously check for new GPS data.
   handleGPS();
   gpsData();
