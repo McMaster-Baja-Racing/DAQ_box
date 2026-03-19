@@ -46,6 +46,7 @@ void setup() {
             COM_TYPE_UBX);  // Set the UART port to output UBX only, no nmea
                             // noise (was a problem maybe?)
         myGNSS.setNavigationFrequency(10);  // the gps runs 10hz
+        myGNSS.setAutoPVT(true);  // automatic PVT updates (lat, lon, speed, datetime)
         myGNSS
             .saveConfiguration();  // Save the current settings to flash and BBR
     }
@@ -86,43 +87,43 @@ void setup() {
 
 void loop() {
     if (ENABLE_PROFILING) {
-        Serial.printf("%d: New loop", millis());
+        Serial.printf("%d: New loop\n", millis());
     }
     //-------------Debug Function-------------------
     controlDebug(Debug::NONE);
 
     if (ENABLE_PROFILING) {
-        Serial.printf("%d: handleInputButton", millis());
+        Serial.printf("%d: handleInputButton\n", millis());
     }
     //-------------Handle Input Button----------------
     handleInputButton();
 
     //-------------RPM Calculations-------------------
     if (ENABLE_PROFILING) {
-        Serial.printf("%d: rpmCalc", millis());
+        Serial.printf("%d: rpmCalc\n", millis());
     }
     rpmCalc();
 
     //-------------Battery Check---------------
     if (ENABLE_PROFILING) {
-        Serial.printf("%d: batteryCheck", millis());
+        Serial.printf("%d: batteryCheck\n", millis());
     }
     batteryCheck();
 
     //-------------LED Strip---------------------
     if (ENABLE_PROFILING) {
-        Serial.printf("%d: setHUD", millis());
+        Serial.printf("%d: setHUD\n", millis());
     }
     setHUD();
 
     //-------------GPS Data---------------------
     if (ENABLE_PROFILING) {
-        Serial.printf("%d: gps", millis());
+        Serial.printf("%d: gps\n", millis());
     }
     gps();
 
     if (ENABLE_PROFILING) {
-        Serial.printf("%d: misc sensors", millis());
+        Serial.printf("%d: misc sensors\n", millis());
     }
 
     if (EN_BRAKE && millis() - brakeTimer > (BRAKE_INTERVAL - 1)) {
@@ -173,7 +174,7 @@ void loop() {
     }
 
     if (ENABLE_PROFILING) {
-        Serial.printf("%d: file creation", millis());
+        Serial.printf("%d: file creation\n", millis());
     }
 
     // If we are using SD card but haven't created the data file yet
@@ -192,7 +193,7 @@ void loop() {
     }
 
     if (ENABLE_PROFILING) {
-        Serial.printf("%d: debug prints", millis());
+        Serial.printf("%d: debug prints\n", millis());
     }
 
     if (SHOW_DEBUG && (millis() - queueSizeTimer > (QUEUE_SIZE_INTERVAL - 1))) {
@@ -205,7 +206,7 @@ void loop() {
     }
 
     if (ENABLE_PROFILING) {
-        Serial.printf("%d: sdSend", millis());
+        Serial.printf("%d: sdSend\n", millis());
     }
     if (millis() - sdTimer > (SD_INTERVAL - 1)) {
         sdTimer = millis();

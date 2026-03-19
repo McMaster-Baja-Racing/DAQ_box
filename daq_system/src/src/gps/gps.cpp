@@ -72,12 +72,12 @@ void dateTime(uint16_t* date, uint16_t* time) {
     uint8_t month, day, hour, minute, second;
 
     if (gps_active) {
-        year = myGNSS.getYear();
-        month = myGNSS.getMonth();
-        day = myGNSS.getDay();
-        hour = myGNSS.getHour();
-        minute = myGNSS.getMinute();
-        second = myGNSS.getSecond();
+        year = myGNSS.packetUBXNAVPVT->data.year;
+        month = myGNSS.packetUBXNAVPVT->data.month;
+        day = myGNSS.packetUBXNAVPVT->data.day;
+        hour = myGNSS.packetUBXNAVPVT->data.hour;
+        minute = myGNSS.packetUBXNAVPVT->data.min;
+        second = myGNSS.packetUBXNAVPVT->data.sec;
         timezoneAdjust(year, month, day, hour);
 
     } else {  // default if no fix.
@@ -96,25 +96,42 @@ void dateTime(uint16_t* date, uint16_t* time) {
 
 // TODO: Cleanup this function
 void handleGPS() {
+    if (ENABLE_PROFILING) {
+        Serial.printf("\t\t%d: check interval\n", millis());
+    }
     if (millis() - gpsTimer > (GPS_INTERVAL - 1)) {
         gpsTimer = millis();
         gps_timesend = true;
-
-        bool hasFix = (myGNSS.getFixType() == 2 ||
-                       myGNSS.getFixType() == 3);  // 2D or better fix
+        if (ENABLE_PROFILING) {
+            Serial.printf("\t\t%d: getFixType\n", millis());
+        }
+        Serial.println(myGNSS.packetUBXNAVPVT->data.fixType);
+        bool hasFix = (myGNSS.packetUBXNAVPVT->data.fixType == 2 ||
+                       myGNSS.packetUBXNAVPVT->data.fixType == 3);  // 2D or better fix
+        if (ENABLE_PROFILING) {
+            Serial.printf("\t\t%d: if hasFix\n", millis());
+        }
         if (hasFix) {
             if (gps_active == false) {
+                if (ENABLE_PROFILING) {
+                    Serial.printf("\t\t%d: updateGPSStatus\n", millis());
+                }
                 updateGPSStatus(GPS_STATUS_HAS_FIX);
-                GPS_year = myGNSS.getYear();
-                GPS_month = myGNSS.getMonth();
-                GPS_day = myGNSS.getDay();
-                GPS_hour = myGNSS.getHour();
-                GPS_minute = myGNSS.getMinute();
-                GPS_seconds = myGNSS.getSecond();
-
+                if (ENABLE_PROFILING) {
+                    Serial.printf("\t\t%d: getting date\n", millis());
+                }
+                GPS_year = myGNSS.packetUBXNAVPVT->data.year;
+                GPS_month = myGNSS.packetUBXNAVPVT->data.month;
+                GPS_day = myGNSS.packetUBXNAVPVT->data.day;
+                GPS_hour = myGNSS.packetUBXNAVPVT->data.hour;
+                GPS_minute = myGNSS.packetUBXNAVPVT->data.min;
+                GPS_seconds = myGNSS.packetUBXNAVPVT->data.sec;
+                if (ENABLE_PROFILING) {
+                    Serial.printf("\t\t%d: timezoneAdjust\n", millis());
+                }
                 timezoneAdjust(GPS_year, GPS_month, GPS_day, GPS_hour);
                 Serial.println("GPS fix found");
-                Serial.println(myGNSS.getFixType());
+                Serial.println(myGNSS.packetUBXNAVPVT->data.fixType);
 
                 digitalWrite(STATUS_PIN, HIGH);
                 delay(1000);
@@ -127,8 +144,8 @@ void handleGPS() {
 
 void gpsData() {
     if (EN_GPS && gps_timesend && gps_active) {
-        float lat = (float)myGNSS.getLatitude() * 0.0000001;
-        float lon = (float)myGNSS.getLongitude() * 0.0000001;
+        float lat = (float)myGNSS.packetUBXNAVPVT->data.lat * 0.0000001;
+        float lon = (float)myGNSS.packetUBXNAVPVT->data.lon * 0.0000001;
 
         // Convert latitude and longitude to DDMM.MMMM format because that's
         // what the old library did And that's what the bin parser library
@@ -144,7 +161,7 @@ void gpsData() {
             lon = -lon;
         }
 
-        float heading = (float)myGNSS.getHeading() * 0.00001;
+        float heading = (float)myGNSS.packetUBXNAVPVT->data.headVeh * 0.00001;
 
         buffPush(GPS_LATITUDE, lat);
         buffPush(GPS_LAT, (unsigned long)(lat >= 0 ? 'N' : 'S'));
@@ -155,15 +172,15 @@ void gpsData() {
         buffPush(GPS_ANGLE, (heading));
 
         // GPS speed is in mm/s, convert to km/h
-        gps_speed = myGNSS.getGroundSpeed() * 0.0036;  // mm/s to km/h
+        gps_speed = myGNSS.packetUBXNAVPVT->data.gSpeed * 0.0036;  // mm/s to km/h
         buffPush(GPS_SPEED, gps_speed);
 
-        uint8_t mo = myGNSS.getMonth();
-        uint8_t da = myGNSS.getDay();
-        uint16_t ye = myGNSS.getYear() % 100;  // last 2 digits of year
-        uint8_t ho = myGNSS.getHour();
-        uint8_t mi = myGNSS.getMinute();
-        uint8_t se = myGNSS.getSecond();
+        uint8_t mo = myGNSS.packetUBXNAVPVT->data.month;
+        uint8_t da = myGNSS.packetUBXNAVPVT->data.day;
+        uint16_t ye = myGNSS.packetUBXNAVPVT->data.year % 100;  // last 2 digits of year
+        uint8_t ho = myGNSS.packetUBXNAVPVT->data.hour;
+        uint8_t mi = myGNSS.packetUBXNAVPVT->data.min;
+        uint8_t se = myGNSS.packetUBXNAVPVT->data.sec;
 
         buffPush(GPS_DAYMONTHYEAR,
                  (unsigned long)((da << 16) + (mo << 8) + (ye)));
@@ -171,7 +188,7 @@ void gpsData() {
                  (unsigned long)((se << 16) + (mi << 8) + (ho)));
 
         if (mi != GPS_minute) {
-            GPS_year = myGNSS.getYear();
+            GPS_year = myGNSS.packetUBXNAVPVT->data.year;
             GPS_month = mo;
             GPS_day = da;
             GPS_hour = ho;
@@ -184,15 +201,16 @@ void gpsData() {
 
 void gps() {
     if (ENABLE_PROFILING) {
-        Serial.printf("\t%d: checkUblox", millis());
+        Serial.printf("\t%d: getPVT\n", millis());
     }
-    myGNSS.checkUblox();  // Continuously check for new GPS data.
+    bool newInfo = myGNSS.getPVT();  // Continuously check for new GPS data.
+    Serial.println(newInfo ? "New GPS data available" : "No new GPS data");
     if (ENABLE_PROFILING) {
-        Serial.printf("\t%d: handleGPS", millis());
+        Serial.printf("\t%d: handleGPS\n", millis());
     }
     handleGPS();
     if (ENABLE_PROFILING) {
-        Serial.printf("\t%d: gpsData", millis());
+        Serial.printf("\t%d: gpsData\n", millis());
     }
     gpsData();
 }
