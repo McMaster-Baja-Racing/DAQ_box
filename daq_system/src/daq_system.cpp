@@ -73,34 +73,56 @@ void setup() {
                 Serial.println("CARD SUCCESS");
                 updateFileStatus(FILE_STATUS_WAITING_FOR_GPS);
             }
+        }
+        delay(500);
     }
-    delay(500);
-}
 
-Serial.println("Setup Finished");
-digitalWrite(STATUS_PIN, LOW);
+    Serial.println("Setup Finished");
+    digitalWrite(STATUS_PIN, LOW);
 
-delay(1000);
+    delay(1000);
 }
 
 void loop() {
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: New loop", millis());
+    }
     //-------------Debug Function-------------------
     controlDebug(Debug::NONE);
 
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: handleInputButton", millis());
+    }
     //-------------Handle Input Button----------------
     handleInputButton();
 
     //-------------RPM Calculations-------------------
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: rpmCalc", millis());
+    }
     rpmCalc();
 
     //-------------Battery Check---------------
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: batteryCheck", millis());
+    }
     batteryCheck();
 
     //-------------LED Strip---------------------
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: setHUD", millis());
+    }
     setHUD();
 
     //-------------GPS Data---------------------
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: gps", millis());
+    }
     gps();
+
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: misc sensors", millis());
+    }
 
     if (EN_BRAKE && millis() - brakeTimer > (BRAKE_INTERVAL - 1)) {
         brakeTimer = millis();
@@ -149,6 +171,10 @@ void loop() {
         // tempData();
     }
 
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: file creation", millis());
+    }
+
     // If we are using SD card but haven't created the data file yet
     if (USE_SD && !(bajaDataFast || bajaData)) {
         // If the GPS timeout has been reached
@@ -164,6 +190,10 @@ void loop() {
         }
     }
 
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: debug prints", millis());
+    }
+
     if (SHOW_DEBUG && (millis() - queueSizeTimer > (QUEUE_SIZE_INTERVAL - 1))) {
         queueSizeTimer = millis();
         Serial.print("savingBuff Size = ");
@@ -173,6 +203,9 @@ void loop() {
         Serial.println((*sdBuff).size());
     }
 
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: sdSend", millis());
+    }
     if (millis() - sdTimer > (SD_INTERVAL - 1)) {
         sdTimer = millis();
         sdSend();
