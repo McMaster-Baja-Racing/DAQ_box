@@ -5,6 +5,7 @@
 #include "../HUD/hud.h"
 #include "../gps/gps.h"
 #include "../sdCard/sdCard.h"
+#include "../statusLED/statusLED.h"
 
 // Initializations
 char filename[] = "/00000000.bin";
@@ -113,15 +114,9 @@ void handleInputButton() {
                 // Travel, Strain, FR_RPM, REAR_SPEED, Battery Percentage,
                 // Battery Voltage");
 
-                gps_flash = true;
-
-                for (int i = 0; i < LED_COUNT; i++) {
-                    strip.setPixelColor(i, strip.Color(0, 255, 0));
-                }
-
+                updateFileStatus(FILE_STATUS_WRITING_SEQUENTIAL);
                 Serial.print("GPS cancelled");
                 digitalWrite(STATUS_PIN, HIGH);
-                strip.show();
                 delay(1000);
                 statusLED = true;
             }

@@ -25,7 +25,6 @@ extern uint32_t gpsTimer;
 
 //extern bool gps_goodmessage;
 extern bool gps_timesend;
-extern bool gps_flash;
 extern bool EN_GPS;
 extern bool gps_active;
 

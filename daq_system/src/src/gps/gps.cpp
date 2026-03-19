@@ -6,6 +6,7 @@
 #include "../fileInformation/file.h"
 #include "../hud/hud.h"
 #include "../datastruct/dataTypes.h"
+#include "../statusLED/statusLED.h"
 
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h> //http://librarymanager/All#SparkFun_u-blox_GNSS
 SFE_UBLOX_GNSS myGNSS;
@@ -31,7 +32,6 @@ uint32_t gpsTimer = millis();
 
 
 bool gps_timesend = false;
-bool gps_flash = true;
 bool EN_GPS = true;
 bool gps_active = false;
 
@@ -99,7 +99,8 @@ void handleGPS() {
 
     bool hasFix = (myGNSS.getFixType() == 2 || myGNSS.getFixType() == 3); // 2D or better fix
     if(hasFix){
-      if(USE_SD && gps_active == false){ 
+      if(gps_active == false){ 
+        updateGPSStatus(GPS_STATUS_HAS_FIX);
         GPS_year = myGNSS.getYear();
         GPS_month = myGNSS.getMonth();
         GPS_day = myGNSS.getDay();
@@ -108,13 +109,6 @@ void handleGPS() {
         GPS_seconds = myGNSS.getSecond();
 
         timezoneAdjust(GPS_year, GPS_month, GPS_day, GPS_hour);
-
-        gps_flash = true;
-        strip.setPixelColor(0, strip.Color(0, 0, 0));
-        strip.setPixelColor(1, strip.Color(0, 0, 0));
-        strip.setPixelColor(2, strip.Color(0, 0, 0));
-        strip.setPixelColor(3, strip.Color(255, 0, 0));
-        strip.show();
         Serial.println("GPS fix found");
         Serial.println(myGNSS.getFixType());
 
@@ -124,15 +118,8 @@ void handleGPS() {
       }
       gps_active = true;
 
-    } else if (EN_GPS) {
-      for (int i = 0; i < LED_COUNT; i++){
-        strip.setPixelColor(i, gps_flash ? strip.Color(255, 0, 0) : strip.Color(0, 0, 0));
-      }
-      gps_flash = !gps_flash;
-      strip.show();
-    }
+    } 
   }
-  
 }
 
 void gpsData(){
@@ -158,10 +145,6 @@ void gpsData(){
 
       buffPush(GPS_LATITUDE, lat);
       buffPush(GPS_LAT, (unsigned long)(lat >= 0 ? 'N' : 'S'));
-      Serial.println("Lat, Lon");
-      Serial.println(lat);
-      Serial.println(lon);
-      Serial.println(heading);
 
       buffPush(GPS_LONGITUTE, lon);
       buffPush(GPS_LON, (unsigned long)(lon >= 0 ? 'E' : 'W'));

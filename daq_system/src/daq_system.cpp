@@ -8,6 +8,7 @@
 #include "src/gps/gps.h"
 #include "src/hud/hud.h"
 #include "src/sdCard/sdCard.h"
+#include "src/statusLED/statusLED.h"
 
 void setup() {
     Serial.begin(115200);
@@ -15,9 +16,7 @@ void setup() {
     Serial.println("Setup Starting");
 
     // Set up LED Strip
-    strip.begin();
-    strip.setBrightness(BRIGHTNESS);
-    strip.show();
+    initializeStatusLED();
     delay(50);
 
     pinMode(REAR_SPEED_HALL_PIN, INPUT);
@@ -32,22 +31,15 @@ void setup() {
 
     delay(1000);
 
-    // Setup section
-    // If the sensor fails to initialize, the status LED will be red
-    // If the sensor initializes successfully, the status LED will be green
-
-    strip.show();
-    // delay(500);
-
     // new gps setup using ublox:
     GPSSerial.begin(38400);  // defaults to 38400 on uart
     if (!myGNSS.begin(GPSSerial)) {
-        strip.setPixelColor(2, strip.Color(255, 0, 0));
+        updateGPSStatus(GPS_STATUS_DISABLED);
         Serial.println("GPS failed or not present");
         EN_GPS = false;
 
     } else {
-        strip.setPixelColor(2, strip.Color(0, 255, 0));
+        updateGPSStatus(GPS_STATUS_NO_FIX);
         Serial.println("GPS serial started");
         myGNSS.setUART1Output(
             COM_TYPE_UBX);  // Set the UART port to output UBX only, no nmea
@@ -67,34 +59,28 @@ void setup() {
             } else {
                 Serial.println("SD using DMA");
                 Serial.println("CARD SUCCESS");
-                // strip.setPixelColor(1, strip.Color(0, 255, 0));
-                // EN_FAST_SD = false; // Disable fast SD for now due to
-                // stability issues
+                updateFileStatus(FILE_STATUS_WAITING_FOR_GPS);
             }
-        } else if (!SD.begin(chipSelect)) {
-            Serial.println("Card failed, or not present");
-            // strip.setPixelColor(1, strip.Color(100, 0, 0));
-            strip.show();
-            USE_SD = false;
-        } else {
-            SdFile::dateTimeCallback(dateTime);
-            Serial.println("CARD SUCCESS");
-            // strip.setPixelColor(1, strip.Color(0, 100, 0));
         }
-        strip.show();
-        delay(500);
+
+        if (!EN_FAST_SD) {
+            if (!SD.begin(chipSelect)) {
+                Serial.println("Card failed, or not present");
+                updateFileStatus(FILE_STATUS_NO_SD);
+                USE_SD = false;
+            } else {
+                SdFile::dateTimeCallback(dateTime);
+                Serial.println("CARD SUCCESS");
+                updateFileStatus(FILE_STATUS_WAITING_FOR_GPS);
+            }
     }
+    delay(500);
+}
 
-    // Set up GPS
-    strip.setPixelColor(0, strip.Color(50, 0, 0));
-    strip.show();
+Serial.println("Setup Finished");
+digitalWrite(STATUS_PIN, LOW);
 
-    strip.show();
-
-    Serial.println("Setup Finished");
-    digitalWrite(STATUS_PIN, LOW);
-
-    delay(1000);
+delay(1000);
 }
 
 void loop() {
@@ -169,10 +155,12 @@ void loop() {
         if (!gps_active && millis() > GPS_TIMEOUT_MILLIS) {
             Serial.println("GPS Timed out, creating sequential file");
             createSequentialFile();
+            updateFileStatus(FILE_STATUS_WRITING_SEQUENTIAL);
         } else if (gps_active) {
             Serial.println("GPS Acquired, creating datetime file");
             createDateTimeFile(GPS_day, GPS_month, GPS_year, GPS_hour,
                                GPS_minute, GPS_seconds);
+            updateFileStatus(FILE_STATUS_WRITING_DATETIME);
         }
     }
 
