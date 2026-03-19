@@ -107,7 +107,6 @@ void handleGPS() {
     if (ENABLE_PROFILING) {
         Serial.printf("\t\t%d: getFixType\n", millis());
     }
-    Serial.println();
     bool hasFix = (fixType == 2 || fixType == 3);  // 2D or better fix
     if (ENABLE_PROFILING) {
         Serial.printf("\t\t%d: if hasFix\n", millis());
