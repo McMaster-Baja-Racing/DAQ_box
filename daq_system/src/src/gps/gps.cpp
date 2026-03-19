@@ -190,7 +190,6 @@ void gps() {
         Serial.printf("\t%d: getPVT\n", millis());
     }
     bool newInfo = myGNSS.getPVT();  // Continuously check for new GPS data.
-    Serial.println(newInfo ? "New GPS data available" : "No new GPS data");
     if(!newInfo) {
         return;
     }
