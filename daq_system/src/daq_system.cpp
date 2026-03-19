@@ -2,6 +2,7 @@
 #include "daq_system_Teensy4.h"
 #include "src/RPM/rpm.h"
 #include "src/battery/battery.h"
+#include "src/config.h"
 #include "src/datastruct/dataTypes.h"
 #include "src/debug/debug.h"
 #include "src/fileInformation/file.h"
@@ -9,7 +10,6 @@
 #include "src/hud/hud.h"
 #include "src/sdCard/sdCard.h"
 #include "src/statusLED/statusLED.h"
-#include "src/config.h"
 
 void setup() {
     Serial.begin(115200);
@@ -42,13 +42,11 @@ void setup() {
     } else {
         updateGPSStatus(GPS_STATUS_NO_FIX);
         Serial.println("GPS serial started");
-        myGNSS.setUART1Output(
-            COM_TYPE_UBX);  // Set the UART port to output UBX only, no nmea
-                            // noise (was a problem maybe?)
-        myGNSS.setNavigationFrequency(10);  // the gps runs 10hz
-        myGNSS.setAutoPVT(true);  // automatic PVT updates (lat, lon, speed, datetime)
-        myGNSS
-            .saveConfiguration();  // Save the current settings to flash and BBR
+        Serial.println(myGNSS.setUART1Output(COM_TYPE_UBX));
+        Serial.println(myGNSS.setNavigationFrequency(10));  // the gps runs 10hz
+        Serial.println(myGNSS.setAutoPVT(false));            // automatic PVT updates
+        Serial.println(myGNSS
+            .saveConfiguration());  // Save the current settings to flash and BBR
     }
 
     // SD Card Setup

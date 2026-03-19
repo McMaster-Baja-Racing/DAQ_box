@@ -33,7 +33,7 @@ bool gps_timesend = false;
 bool EN_GPS = true;
 bool gps_active = false;
 
-float gps_speed = 0;
+float gps_speed = 0.0f;
 
 void timezoneAdjust(uint16_t& year, uint8_t& month, uint8_t& day,
                     uint8_t& hour) {
@@ -68,6 +68,9 @@ void timezoneAdjust(uint16_t& year, uint8_t& month, uint8_t& day,
 
 // Function Definitions
 void dateTime(uint16_t* date, uint16_t* time) {
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: dateTime\n", millis());
+    }
     uint16_t year;
     uint8_t month, day, hour, minute, second;
 
@@ -96,56 +99,55 @@ void dateTime(uint16_t* date, uint16_t* time) {
 
 // TODO: Cleanup this function
 void handleGPS() {
-    if (ENABLE_PROFILING) {
-        Serial.printf("\t\t%d: check interval\n", millis());
-    }
-    if (millis() - gpsTimer > (GPS_INTERVAL - 1)) {
-        gpsTimer = millis();
-        gps_timesend = true;
-        if (ENABLE_PROFILING) {
-            Serial.printf("\t\t%d: getFixType\n", millis());
-        }
-        Serial.println(myGNSS.packetUBXNAVPVT->data.fixType);
-        bool hasFix = (myGNSS.packetUBXNAVPVT->data.fixType == 2 ||
-                       myGNSS.packetUBXNAVPVT->data.fixType == 3);  // 2D or better fix
-        if (ENABLE_PROFILING) {
-            Serial.printf("\t\t%d: if hasFix\n", millis());
-        }
-        if (hasFix) {
-            if (gps_active == false) {
-                if (ENABLE_PROFILING) {
-                    Serial.printf("\t\t%d: updateGPSStatus\n", millis());
-                }
-                updateGPSStatus(GPS_STATUS_HAS_FIX);
-                if (ENABLE_PROFILING) {
-                    Serial.printf("\t\t%d: getting date\n", millis());
-                }
-                GPS_year = myGNSS.packetUBXNAVPVT->data.year;
-                GPS_month = myGNSS.packetUBXNAVPVT->data.month;
-                GPS_day = myGNSS.packetUBXNAVPVT->data.day;
-                GPS_hour = myGNSS.packetUBXNAVPVT->data.hour;
-                GPS_minute = myGNSS.packetUBXNAVPVT->data.min;
-                GPS_seconds = myGNSS.packetUBXNAVPVT->data.sec;
-                if (ENABLE_PROFILING) {
-                    Serial.printf("\t\t%d: timezoneAdjust\n", millis());
-                }
-                timezoneAdjust(GPS_year, GPS_month, GPS_day, GPS_hour);
-                Serial.println("GPS fix found");
-                Serial.println(myGNSS.packetUBXNAVPVT->data.fixType);
+    uint8_t fixType = myGNSS.getFixType();
 
-                digitalWrite(STATUS_PIN, HIGH);
-                delay(1000);
-                statusLED = true;
+    GPS_year = myGNSS.getYear();
+    GPS_month = myGNSS.getMonth();
+    GPS_day = myGNSS.getDay();
+    GPS_hour = myGNSS.getHour();
+    GPS_minute = myGNSS.getMinute();
+    GPS_seconds = myGNSS.getSecond();
+
+    gps_timesend = true;
+    if (ENABLE_PROFILING) {
+        Serial.printf("\t\t%d: getFixType\n", millis());
+    }
+    Serial.println();
+    bool hasFix = (fixType == 2 || fixType == 3);  // 2D or better fix
+    if (ENABLE_PROFILING) {
+        Serial.printf("\t\t%d: if hasFix\n", millis());
+    }
+    if (hasFix) {
+        if (gps_active == false) {
+            if (ENABLE_PROFILING) {
+                Serial.printf("\t\t%d: updateGPSStatus\n", millis());
             }
-            gps_active = true;
+            updateGPSStatus(GPS_STATUS_HAS_FIX);
+            if (ENABLE_PROFILING) {
+                Serial.printf("\t\t%d: getting date\n", millis());
+            }
+
+            if (ENABLE_PROFILING) {
+                Serial.printf("\t\t%d: timezoneAdjust\n", millis());
+            }
+            timezoneAdjust(GPS_year, GPS_month, GPS_day, GPS_hour);
+            Serial.println("GPS fix found");
+
+            digitalWrite(STATUS_PIN, HIGH);
+            delay(1000);
+            statusLED = true;
         }
+        gps_active = true;
     }
 }
 
 void gpsData() {
     if (EN_GPS && gps_timesend && gps_active) {
-        float lat = (float)myGNSS.packetUBXNAVPVT->data.lat * 0.0000001;
-        float lon = (float)myGNSS.packetUBXNAVPVT->data.lon * 0.0000001;
+        float lat = (float)myGNSS.getLatitude() * 0.0000001;
+        float lon = (float)myGNSS.getLongitude() * 0.0000001;
+        float heading = (float)myGNSS.getHeading() * 0.00001;
+        // speed in mm/s to km/h
+        gps_speed = myGNSS.getGroundSpeed() * 0.0036;
 
         // Convert latitude and longitude to DDMM.MMMM format because that's
         // what the old library did And that's what the bin parser library
@@ -161,8 +163,6 @@ void gpsData() {
             lon = -lon;
         }
 
-        float heading = (float)myGNSS.packetUBXNAVPVT->data.headVeh * 0.00001;
-
         buffPush(GPS_LATITUDE, lat);
         buffPush(GPS_LAT, (unsigned long)(lat >= 0 ? 'N' : 'S'));
 
@@ -172,39 +172,33 @@ void gpsData() {
         buffPush(GPS_ANGLE, (heading));
 
         // GPS speed is in mm/s, convert to km/h
-        gps_speed = myGNSS.packetUBXNAVPVT->data.gSpeed * 0.0036;  // mm/s to km/h
+
         buffPush(GPS_SPEED, gps_speed);
 
-        uint8_t mo = myGNSS.packetUBXNAVPVT->data.month;
-        uint8_t da = myGNSS.packetUBXNAVPVT->data.day;
-        uint16_t ye = myGNSS.packetUBXNAVPVT->data.year % 100;  // last 2 digits of year
-        uint8_t ho = myGNSS.packetUBXNAVPVT->data.hour;
-        uint8_t mi = myGNSS.packetUBXNAVPVT->data.min;
-        uint8_t se = myGNSS.packetUBXNAVPVT->data.sec;
-
         buffPush(GPS_DAYMONTHYEAR,
-                 (unsigned long)((da << 16) + (mo << 8) + (ye)));
+                 (unsigned long)((GPS_day << 16) + (GPS_month << 8) + (GPS_year % 100)));
         buffPush(GPS_SECONDMINUTEHOUR,
-                 (unsigned long)((se << 16) + (mi << 8) + (ho)));
-
-        if (mi != GPS_minute) {
-            GPS_year = myGNSS.packetUBXNAVPVT->data.year;
-            GPS_month = mo;
-            GPS_day = da;
-            GPS_hour = ho;
-            GPS_minute = mi;
-            GPS_seconds = se;
-        }
+                 (unsigned long)((GPS_seconds << 16) + (GPS_minute << 8) + (GPS_hour)));
         gps_timesend = false;
     }
 }
 
 void gps() {
+    if (millis() - gpsTimer < (GPS_INTERVAL - 1)) {
+        // Wait for the next interval
+        return;
+    }
+
+    gpsTimer = millis();
+
     if (ENABLE_PROFILING) {
         Serial.printf("\t%d: getPVT\n", millis());
     }
     bool newInfo = myGNSS.getPVT();  // Continuously check for new GPS data.
     Serial.println(newInfo ? "New GPS data available" : "No new GPS data");
+    if(!newInfo) {
+        return;
+    }
     if (ENABLE_PROFILING) {
         Serial.printf("\t%d: handleGPS\n", millis());
     }

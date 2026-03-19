@@ -2,6 +2,7 @@
 #include <SD.h>
 
 /***  Settings  ***/
+
 #define SHOW_DEBUG false
 bool EN_TEMP = false;  // Uses prim_temp connector on PCB
 bool EN_BRAKE = false;
