@@ -3,8 +3,6 @@
 #include <SD.h>
 
 #include <cstdio>
-// #include <Adafruit_GPS.h>
-#include <SparkFun_u-blox_GNSS_Arduino_Library.h>  //http://librarymanager/All#SparkFun_u-blox_GNSS
 
 #include "../config.h"
 #include "../datastruct/dataTypes.h"
@@ -12,13 +10,10 @@
 #include "../hud/hud.h"
 #include "../sdCard/sdCard.h"
 #include "../statusLED/statusLED.h"
-SFE_UBLOX_GNSS myGNSS;
+SFE_UBLOX_GNSS_SERIAL myGNSS;
 // serial pins on 7/8
 
 // Initializations
-
-// Adafruit_GPS GPS = Adafruit_GPS(&GPSSerial);
-
 uint8_t GPS_month = 1;
 uint8_t GPS_day = 1;
 uint8_t GPS_hour = 1;

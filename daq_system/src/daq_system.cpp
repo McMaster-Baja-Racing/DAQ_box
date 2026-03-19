@@ -41,6 +41,7 @@ void setup() {
 
     } else {
         updateGPSStatus(GPS_STATUS_NO_FIX);
+        delay(1000);
         Serial.println("GPS serial started");
         Serial.println(myGNSS.setUART1Output(COM_TYPE_UBX));
         Serial.println(myGNSS.setNavigationFrequency(10));  // the gps runs 10hz

@@ -1,7 +1,7 @@
 #include <cstdint>
 //#include <Adafruit_GPS.h>
 #include <Adafruit_NeoPixel.h>
-#include <SparkFun_u-blox_GNSS_Arduino_Library.h>
+#include <SparkFun_u-blox_GNSS_v3.h>
 #include "TimeLib.h"
 
 // Definitions
@@ -10,7 +10,7 @@
 
 // Declarations
 //extern Adafruit_GPS GPS;
-extern SFE_UBLOX_GNSS myGNSS;
+extern SFE_UBLOX_GNSS_SERIAL myGNSS;
 
 extern int8_t TIMEZONE_OFFSET;
 extern uint8_t GPS_month;

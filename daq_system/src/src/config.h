@@ -1,1 +1,1 @@
-const bool ENABLE_PROFILING = true;
+const bool ENABLE_PROFILING = false;
