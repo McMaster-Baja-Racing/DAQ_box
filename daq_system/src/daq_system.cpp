@@ -10,6 +10,7 @@
 #include "src/hud/hud.h"
 #include "src/sdCard/sdCard.h"
 #include "src/statusLED/statusLED.h"
+#include "src/strainData/strain.h"
 
 void setup() {
     Serial.begin(115200);
@@ -44,7 +45,7 @@ void setup() {
         delay(1000);
         Serial.println("GPS serial started");
         Serial.println(myGNSS.setUART1Output(COM_TYPE_UBX));
-        Serial.println(myGNSS.setNavigationFrequency(10));  // the gps runs 10hz
+        Serial.println(myGNSS.setNavigationFrequency(12.5));  // the gps runs 10hz - no, gavin
         Serial.println(myGNSS.setAutoPVT(false));            // automatic PVT updates
         Serial.println(myGNSS
             .saveConfiguration());  // Save the current settings to flash and BBR
@@ -140,11 +141,12 @@ void loop() {
         strainTimer1 = millis();
         // Uncomment when this works
         // sheavePos();
+        //strainData(1);
     }
 
     if (EN_STRAIN2 && millis() - strainTimer2 > (STRAIN_INTERVAL - 1)) {
         strainTimer2 = millis();
-        // strainData(3);
+        strainData(3);
     }
 
     if (EN_SUS1 && millis() - susTimer1 > (SUS_INTERVAL - 1)) {
