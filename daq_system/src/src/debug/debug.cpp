@@ -16,8 +16,8 @@ void debug_rpm(){
     Serial.print("prim: ");
     Serial.println(PRIM_rpm);
     delay(10);
-    Serial.print(", Sec: ");
-    Serial.println(REAR_SPEED_int);
+  Serial.print(", Sec: ");
+  Serial.println(REAR_SPEED_rpm);
 }
 
 void debug_strain(){

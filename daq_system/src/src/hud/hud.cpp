@@ -37,7 +37,7 @@ void setHUD() {
           numLED = map(PRIM_rpm, 1700, 3800, -1, 8);
           break;
         case REAR_SPEED_HUD:
-          numLED = map(REAR_SPEED_int, 0, 5000, -1, 8);
+          numLED = map((int)REAR_SPEED_rpm, 0, 5000, -1, 8);
           break;
         case BRAKE:
           numLED = map(brake_pres, 0, 1200, -1, 8);

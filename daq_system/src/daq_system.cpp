@@ -45,8 +45,9 @@ void setup() {
         delay(1000);
         Serial.println("GPS serial started");
         Serial.println(myGNSS.setUART1Output(COM_TYPE_UBX));
-        Serial.println(myGNSS.setNavigationFrequency(12.5));  // the gps runs 10hz - no, gavin
-        Serial.println(myGNSS.setAutoPVT(false));            // automatic PVT updates
+        Serial.println(myGNSS.setNavigationFrequency(10));  // the gps runs 10hz - no, gavin
+        Serial.println(myGNSS.setAutoPVT(true));            // automatic PVT updates
+        //try setting max wait 
         Serial.println(myGNSS
             .saveConfiguration());  // Save the current settings to flash and BBR
     }
@@ -61,6 +62,7 @@ void setup() {
             } else {
                 Serial.println("SD using DMA");
                 Serial.println("CARD SUCCESS");
+                SdFile::dateTimeCallback(dateTime);
                 updateFileStatus(FILE_STATUS_WAITING_FOR_GPS);
             }
         }

@@ -6,7 +6,7 @@
 
 // Definitions
 #define GPSSerial Serial2 
-#define GPS_INTERVAL 80 // 40 ms 25hz, use 100 for 10 hz.
+#define GPS_INTERVAL 100 // 40 ms 25hz, use 100 for 10 hz.
 
 // Declarations
 //extern Adafruit_GPS GPS;
