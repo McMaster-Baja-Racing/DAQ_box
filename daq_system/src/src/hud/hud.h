@@ -2,9 +2,9 @@
 #include <Adafruit_NeoPixel.h>
 
 // Definitions
-#define LED_COUNT 10  // 2 x 5 LED strip
-#define BRIGHTNESS 50  // Max brightness = 255
-#define HUD_PIN 9  // Digital Pin 6 for HUD LED's
+#define LED_COUNT 4  // 2 x 5 LED strip
+#define BRIGHTNESS 100  // Max brightness = 255
+#define HUD_PIN 2  // Digital Pin 6 for HUD LED's
 #define LED_INTERVAL 100  // Period in msec for LED update (larger than 100 produces noticable lag)
 
 enum HUD {

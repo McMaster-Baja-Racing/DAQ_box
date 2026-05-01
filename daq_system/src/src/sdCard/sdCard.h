@@ -27,10 +27,12 @@ extern dataStruct temp;
 
 extern File bajaData;
 
-extern bool gps_active;
 extern bool statusLED;
 extern bool EN_SEROUT;
 extern bool USE_SD;
+
+extern bool EN_FAST_SD;
+extern FsFile bajaDataFast;
 
 // Function Declarations
 void sdSend();

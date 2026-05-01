@@ -3,7 +3,6 @@
 #include "hud.h"
 #include "../sdCard/sdCard.h"
 #include "../RPM/rpm.h"
-#include "../temperature/temperature.h"
 #include "../suspensionData/sus.h"
 #include "../gps/gps.h"
 
@@ -13,7 +12,7 @@ Adafruit_NeoPixel strip(LED_COUNT, HUD_PIN, NEO_GRB + NEO_KHZ800);
 int HUD_SHOW = BRAKE;
 int brake_pres = 0.0;
 
-bool EN_HUD = true;
+bool EN_HUD = false;
 
 unsigned long ledTimer = millis();
 
@@ -38,7 +37,7 @@ void setHUD() {
           numLED = map(PRIM_rpm, 1700, 3800, -1, 8);
           break;
         case REAR_SPEED_HUD:
-          numLED = map(REAR_SPEED_int, 0, 5000, -1, 8);
+          numLED = map((int)REAR_SPEED_rpm, 0, 5000, -1, 8);
           break;
         case BRAKE:
           numLED = map(brake_pres, 0, 1200, -1, 8);
@@ -51,7 +50,8 @@ void setHUD() {
         //   numLED = map(batPercent, 0, 100, -1, 8);
         //   break;
         case STRAIN:
-          numLED = map(temperature, 0, 150, -1, 8);
+          // Placeholder until strain data is available
+          numLED = map(0, 0, 1000, -1, 8);
           break;
         case SUS1:
           numLED = map(sus1, 140, 310, -1, 8);

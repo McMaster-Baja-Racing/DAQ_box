@@ -4,15 +4,15 @@
 /***  Settings  ***/
 
 #define SHOW_DEBUG false
-bool EN_TEMP = true;  // Uses prim_temp connector on PCB
-bool EN_BRAKE = true;
-bool EN_IMU = true;
-bool EN_STRAIN1 = true; // On for Sheave position
+bool EN_TEMP = false;  // Uses prim_temp connector on PCB
+bool EN_BRAKE = false;
+bool EN_IMU = false;
+bool EN_STRAIN1 = false; // On for Sheave position
 bool EN_STRAIN2 = false;
-bool EN_SUS1 = true;
-bool EN_SUS2 = true;
-bool EN_SUS3 = true;
-bool EN_SUS4 = true;
+bool EN_SUS1 = false;
+bool EN_SUS2 = false;
+bool EN_SUS3 = false;
+bool EN_SUS4 = false;
 
 /***  General  ***/
 // Interval between each data collection point, this is where you set data logging rate
@@ -27,11 +27,14 @@ bool EN_SUS4 = true;
 #define SUS_INTERVAL 5
 #define TEMP_INTERVAL 500
 
+// Time until the program stops waiting for GPS fix and writes to default filename
+#define GPS_TIMEOUT_MILLIS (15 * 1000)
+
 /***  Pins  ***/
 #define FR_HALL_PIN 2
 #define FL_HALL_PIN 3
-#define REAR_SPEED_HALL_PIN 4
-#define PRIM_HALL_PIN 5
+#define REAR_SPEED_HALL_PIN 27
+#define PRIM_HALL_PIN 26
 
 /***********************************/
 /***  Start of Global variables  ***/
@@ -50,7 +53,9 @@ unsigned long susTimer2 = millis();
 unsigned long susTimer3 = millis();
 unsigned long susTimer4 = millis();
 
-/***  GPS  ***/ 
-bool use_gps = false;
-
 const int chipSelect = BUILTIN_SDCARD;
+
+bool EN_FAST_SD = true;
+
+//Timezone
+int8_t TIMEZONE_OFFSET = -4; //UTC -4 for EDT

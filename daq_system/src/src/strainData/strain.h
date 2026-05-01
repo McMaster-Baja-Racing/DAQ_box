@@ -1,7 +1,7 @@
 #include <cstdint>
 
 // Constants
-constexpr int strainPin [] = {20,21,22,23,41,40};
+constexpr int strainPin [] = {20,21,22,27,41,40};
 
 // Declarations
 extern int strain [6];

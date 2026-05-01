@@ -1,160 +1,203 @@
 #include "gps.h"
-#include <cstdio>
+
 #include <SD.h>
-#include <Adafruit_GPS.h>
-#include "../sdCard/sdCard.h"
+
+#include <cstdio>
+
+#include "../config.h"
+#include "../datastruct/dataTypes.h"
 #include "../fileInformation/file.h"
 #include "../hud/hud.h"
-#include "../datastruct/dataTypes.h"
+#include "../sdCard/sdCard.h"
+#include "../statusLED/statusLED.h"
+SFE_UBLOX_GNSS_SERIAL myGNSS;
+// serial pins on 7/8
 
 // Initializations
-Adafruit_GPS GPS = Adafruit_GPS(&GPSSerial);
-
 uint8_t GPS_month = 1;
 uint8_t GPS_day = 1;
-uint8_t GPS_hour = 1; 
-uint8_t GPS_minute = 30; 
+uint8_t GPS_hour = 1;
+uint8_t GPS_minute = 30;
 uint8_t GPS_seconds = 25;
 
-uint16_t GPS_year = 2023;
+uint16_t GPS_year = 2026;
 
 uint32_t gpsTimer = millis();
 
-bool gps_goodmessage = false;
 bool gps_timesend = false;
-bool gps_flash = true;
 bool EN_GPS = true;
+bool gps_active = false;
 
-float gps_speed = 0;
+float gps_speed = 0.0f;
+
+void timezoneAdjust(uint16_t& year, uint8_t& month, uint8_t& day,
+                    uint8_t& hour) {
+    // Make a signed copy for calculation
+    int16_t signedHour = (int16_t)hour;
+    signedHour += TIMEZONE_OFFSET;  // negative offsets are safe now
+
+    // Days in each month
+    uint8_t daysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0))
+        daysInMonth[1] = 29;
+
+    // Backward rollover only (hour < 0 → previous day)
+    while (signedHour < 0) {
+        signedHour += 24;
+        day--;
+    }
+
+    // Handle day < 1 → previous month/year
+    while (day < 1) {
+        month--;
+        if (month < 1) {
+            month = 12;
+            year--;
+        }
+        day += daysInMonth[month - 1];
+    }
+
+    // Write the adjusted hour back to the original unsigned variable
+    hour = (uint8_t)signedHour;
+}
 
 // Function Definitions
 void dateTime(uint16_t* date, uint16_t* time) {
-
-  uint16_t year;
-  uint8_t month, day, hour, minute, second;
-
-  if (GPS.fix) {
-    year = GPS_year;
-    month = GPS_month;
-    day = GPS_day;
-    hour = GPS_hour;
-    minute = GPS_minute;
-    second = GPS_seconds;
-  } else {
-    year = 2030;
-    month = 3;
-    day = 1;
-    hour = 13;
-    minute = 2;
-    second = 50;
-  }
-  // Return date using FAT_DATE macro to format fields
-  *date = FAT_DATE(year, month, day);
-  // Return time using FAT_TIME macro to format fields
-  *time = FAT_TIME(hour, minute, second);
-}
-
-void gpsMessage(){
-  if (GPS.newNMEAreceived()) {  
-    if (!GPS.parse(GPS.lastNMEA())) {  // this also sets the newNMEAreceived() flag to false
-      gps_goodmessage = false;
-    } else {
-      gps_goodmessage = true;
+    if (ENABLE_PROFILING) {
+        Serial.printf("%d: dateTime\n", millis());
     }
-  }
+    uint16_t year;
+    uint8_t month, day, hour, minute, second;
+
+    if (gps_active) {
+        year = myGNSS.packetUBXNAVPVT->data.year;
+        month = myGNSS.packetUBXNAVPVT->data.month;
+        day = myGNSS.packetUBXNAVPVT->data.day;
+        hour = myGNSS.packetUBXNAVPVT->data.hour;
+        minute = myGNSS.packetUBXNAVPVT->data.min;
+        second = myGNSS.packetUBXNAVPVT->data.sec;
+        timezoneAdjust(year, month, day, hour);
+
+    } else {  // default if no fix.
+        year = 2030;
+        month = 3;
+        day = 1;
+        hour = 13;
+        minute = 0;
+        second = 0;
+    }
+
+    *date = FAT_DATE(year, month, day);
+    // Return time using FAT_TIME macro to format fields
+    *time = FAT_TIME(hour, minute, second);
 }
 
 // TODO: Cleanup this function
 void handleGPS() {
-  if (millis() - gpsTimer > (GPS_INTERVAL - 1)) {
-    gpsTimer = millis();
+    uint8_t fixType = myGNSS.getFixType();
+
+    GPS_year = myGNSS.getYear();
+    GPS_month = myGNSS.getMonth();
+    GPS_day = myGNSS.getDay();
+    GPS_hour = myGNSS.getHour();
+    GPS_minute = myGNSS.getMinute();
+    GPS_seconds = myGNSS.getSecond();
+
     gps_timesend = true;
-    if (GPS.fix) {
-      if (USE_SD) {
+    if (ENABLE_PROFILING) {
+        Serial.printf("\t\t%d: getFixType\n", millis());
+    }
+    bool hasFix = (fixType == 2 || fixType == 3);  // 2D or better fix
+    if (ENABLE_PROFILING) {
+        Serial.printf("\t\t%d: if hasFix\n", millis());
+    }
+    if (hasFix) {
         if (gps_active == false) {
-          GPS_year = GPS.year;
-          GPS_year = GPS.year;
-          GPS_month = GPS.month;
-          GPS_day = GPS.day;
-          GPS_hour = GPS.hour;
-          GPS_minute = GPS.minute;
-          GPS_seconds = GPS.seconds;
-          getFilename(GPS.hour, GPS.minute, GPS.seconds);
-          getDirectory(GPS.day, GPS.month, GPS.year);
-          SD.mkdir(directory);
-          Serial.println(filename);
-          Serial.println(directory);
-          strcpy(fileDir, directory);
-          strcat(fileDir, filename);
-          Serial.println(fileDir);
-          bajaData = SD.open(fileDir, FILE_WRITE);  // Create file
-          if (bajaData == 0) {
-            Serial.println("File failed to write");
-            // don't do anything more:
-            USE_SD = false;
-          }
-          gps_flash = true;
-          for (int i = 0; i < LED_COUNT; i++) {
-            strip.setPixelColor(i, strip.Color(0, 255, 0));
-          }
-          Serial.println("Fix Found Recording Starting");
-          digitalWrite(STATUS_PIN, HIGH);
-          strip.show();
-          delay(1000);
-          statusLED = true;
-        }
-      }
-      gps_active = true;
+            if (ENABLE_PROFILING) {
+                Serial.printf("\t\t%d: updateGPSStatus\n", millis());
+            }
+            updateGPSStatus(GPS_STATUS_HAS_FIX);
+            if (ENABLE_PROFILING) {
+                Serial.printf("\t\t%d: getting date\n", millis());
+            }
 
-    } else if (EN_GPS) {
-      if (gps_flash == true) {
-        for (int i = 0; i < LED_COUNT; i++) {
-          strip.setPixelColor(i, strip.Color(255, 0, 0));
-        }
-        gps_flash = false;
-      } else {
-        for (int i = 0; i < LED_COUNT; i++) {
-          strip.setPixelColor(i, strip.Color(0, 0, 0));
-        }
-        gps_flash = true;
-      }
+            if (ENABLE_PROFILING) {
+                Serial.printf("\t\t%d: timezoneAdjust\n", millis());
+            }
+            timezoneAdjust(GPS_year, GPS_month, GPS_day, GPS_hour);
+            Serial.println("GPS fix found");
 
-      strip.show();
+            digitalWrite(STATUS_PIN, HIGH);
+            delay(1000);
+            statusLED = true;
+        }
+        gps_active = true;
     }
-  }
 }
 
-void gpsData(){
-    if (EN_GPS && gps_timesend && gps_goodmessage && GPS.fix) {
+void gpsData() {
+    if (EN_GPS && gps_timesend && gps_active) {
+        float lat = (float)myGNSS.getLatitude() * 0.0000001;
+        float lon = (float)myGNSS.getLongitude() * 0.0000001;
+        float heading = (float)myGNSS.getHeading() * 0.00001;
+        // speed in mm/s to km/h
+        gps_speed = myGNSS.getGroundSpeed() * 0.0036;
 
-    buffPush(GPS_LATITUDE, GPS.latitude);
-    buffPush(GPS_LAT, (unsigned long)GPS.lat);
+        // Convert latitude and longitude to DDMM.MMMM format because that's
+        // what the old library did And that's what the bin parser library
+        // expects
+        int lat_deg = (int)lat;
+        float lat_min = (lat - lat_deg) * 60.0;
+        lat = lat_deg * 100 + lat_min;
 
-    buffPush(GPS_LONGITUTE, GPS.longitude);
-    buffPush(GPS_LON, (unsigned long)GPS.lon);
+        int lon_deg = (int)lon;
+        float lon_min = (lon - lon_deg) * 60.0;
+        lon = lon_deg * 100 + lon_min;
+        if (lon < 0) {
+            lon = -lon;
+        }
 
-    buffPush(GPS_ANGLE, GPS.angle);
+        buffPush(GPS_LATITUDE, lat);
+        buffPush(GPS_LAT, (unsigned long)(lat >= 0 ? 'N' : 'S'));
 
-    // GPS speed is in knots
-    gps_speed = GPS.speed * 1.852;
-    buffPush(GPS_SPEED, gps_speed);
-    buffPush(GPS_DAYMONTHYEAR, (unsigned long)((GPS.day << 16) + (GPS.month << 8) + (GPS.year)));
-    buffPush(GPS_SECONDMINUTEHOUR, (unsigned long)((GPS.seconds << 16) + (GPS.minute << 8) + (GPS.hour)));
-    if (GPS.minute != GPS_minute) {
-      GPS_year = GPS.year;
-      GPS_year = GPS.year;
-      GPS_month = GPS.month;
-      GPS_day = GPS.day;
-      GPS_hour = GPS.hour;
-      GPS_minute = GPS.minute;
-      GPS_seconds = GPS.seconds;
+        buffPush(GPS_LONGITUTE, lon);
+        buffPush(GPS_LON, (unsigned long)(lon >= 0 ? 'E' : 'W'));
+
+        buffPush(GPS_ANGLE, (heading));
+
+        // GPS speed is in mm/s, convert to km/h
+
+        buffPush(GPS_SPEED, gps_speed);
+
+        buffPush(GPS_DAYMONTHYEAR,
+                 (unsigned long)((GPS_day << 16) + (GPS_month << 8) + (GPS_year % 100)));
+        buffPush(GPS_SECONDMINUTEHOUR,
+                 (unsigned long)((GPS_seconds << 16) + (GPS_minute << 8) + (GPS_hour)));
+        gps_timesend = false;
     }
-    gps_timesend = false;
-  }
 }
 
-void gps(){
-  gpsMessage();
-  handleGPS();
-  gpsData();
+void gps() {
+    if (millis() - gpsTimer < (GPS_INTERVAL - 1)) {
+        // Wait for the next interval
+        return;
+    }
+
+    gpsTimer = millis();
+
+    if (ENABLE_PROFILING) {
+        Serial.printf("\t%d: getPVT\n", millis());
+    }
+    bool newInfo = myGNSS.getPVT();  // Continuously check for new GPS data.
+    if(!newInfo) {
+        return;
+    }
+    if (ENABLE_PROFILING) {
+        Serial.printf("\t%d: handleGPS\n", millis());
+    }
+    handleGPS();
+    if (ENABLE_PROFILING) {
+        Serial.printf("\t%d: gpsData\n", millis());
+    }
+    gpsData();
 }
