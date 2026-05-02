@@ -19,7 +19,7 @@ void setup() {
 
     // Set up LED Strip
     initializeStatusLED();
-    delay(50);
+    //delay(50);
 
     pinMode(REAR_SPEED_HALL_PIN, INPUT);
     pinMode(PRIM_HALL_PIN, INPUT);
@@ -29,12 +29,9 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), incrementHall_PRIM,
                     RISING);
 
-    pinMode(STATUS_PIN, OUTPUT);
-
-    delay(1000);
-
+    
     // new gps setup using ublox:
-    GPSSerial.begin(38400);  // defaults to 38400 on uart
+    GPSSerial.begin(38400);  // defaults to 38400 on uart, you can try turning this up.
     if (!myGNSS.begin(GPSSerial)) {
         updateGPSStatus(GPS_STATUS_DISABLED);
         Serial.println("GPS failed or not present");
@@ -42,49 +39,35 @@ void setup() {
 
     } else {
         updateGPSStatus(GPS_STATUS_NO_FIX);
-        delay(1000);
+        //delay(1000); //doubt this is needed
         Serial.println("GPS serial started");
         Serial.println(myGNSS.setUART1Output(COM_TYPE_UBX));
         Serial.println(myGNSS.setNavigationFrequency(10));  // the gps runs 10hz - no, gavin
         Serial.println(myGNSS.setAutoPVT(true));            // automatic PVT updates
-        //try setting max wait 
+        //try setting max wait if you're gonna use blocking, might reduce the time.
         Serial.println(myGNSS
             .saveConfiguration());  // Save the current settings to flash and BBR
     }
 
     // SD Card Setup
     if (USE_SD) {
-        if (EN_FAST_SD) {
-            // note, DMA_SDIO was slower, but might be useful in the future
-            if (!SD.sdfs.begin(SdioConfig(FIFO_SDIO))) {
-                Serial.println("SD using FIFO failed, falling back to slow SD");
-                EN_FAST_SD = false;
-            } else {
-                Serial.println("SD using DMA");
-                Serial.println("CARD SUCCESS");
-                SdFile::dateTimeCallback(dateTime);
-                updateFileStatus(FILE_STATUS_WAITING_FOR_GPS);
-            }
+       
+        // note, DMA_SDIO was slower, but might be useful in the future
+        if (!SD.sdfs.begin(SdioConfig(FIFO_SDIO))) {
+            Serial.println("SD using FIFO failed, card failed or not present");
+        } else {
+            Serial.println("SD using DMA");
+            Serial.println("CARD SUCCESS");
+            SdFile::dateTimeCallback(dateTime);
+            updateFileStatus(FILE_STATUS_WAITING_FOR_GPS);
         }
 
-        if (!EN_FAST_SD) {
-            if (!SD.begin(chipSelect)) {
-                Serial.println("Card failed, or not present");
-                updateFileStatus(FILE_STATUS_NO_SD);
-                USE_SD = false;
-            } else {
-                SdFile::dateTimeCallback(dateTime);
-                Serial.println("CARD SUCCESS");
-                updateFileStatus(FILE_STATUS_WAITING_FOR_GPS);
-            }
-        }
-        delay(500);
+        // delay(500); //don't think this is needed either.
     }
 
     Serial.println("Setup Finished");
-    digitalWrite(STATUS_PIN, LOW);
 
-    delay(1000);
+    // delay(1000); Same deal, probably not needed.
 }
 
 void loop() {
@@ -181,7 +164,7 @@ void loop() {
     }
 
     // If we are using SD card but haven't created the data file yet
-    if (USE_SD && !(bajaDataFast || bajaData)) {
+    if (USE_SD && !(bajaDataFast)) {
         // If the GPS timeout has been reached
         if (!gps_active && millis() > GPS_TIMEOUT_MILLIS) {
             Serial.println("GPS Timed out, creating sequential file");

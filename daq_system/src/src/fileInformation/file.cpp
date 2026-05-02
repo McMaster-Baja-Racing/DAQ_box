@@ -32,21 +32,14 @@ void getDirectory(uint8_t day, uint8_t month, uint16_t year) {
  */
 void createFile() {
     Serial.println(fileDir);
-    if (EN_FAST_SD) {
-        bajaDataFast.open(fileDir, O_RDWR | O_CREAT | O_AT_END);  // Create file
-        if (!bajaDataFast) {
-            Serial.println("File failed to write");
-            Serial.println(bajaDataFast.getError());
-            USE_SD = false;
-        }
-        bajaDataFast.sync();
-    } else {
-        bajaData = SD.open(fileDir, FILE_WRITE);  // Create file
-        if (bajaData == 0) {
-            Serial.println("File failed to write");
-            USE_SD = false;
-        }
+    bajaDataFast.open(fileDir, O_RDWR | O_CREAT | O_AT_END);  // Create file
+    if (!bajaDataFast) {
+        Serial.println("File failed to write");
+        Serial.println(bajaDataFast.getError());
+        USE_SD = false;
     }
+    bajaDataFast.sync();
+
 }
 
 /**
@@ -116,9 +109,9 @@ void handleInputButton() {
 
                 updateFileStatus(FILE_STATUS_WRITING_SEQUENTIAL);
                 Serial.print("GPS cancelled");
-                digitalWrite(STATUS_PIN, HIGH);
+
+                //probably not needed but legacy LOL
                 delay(1000);
-                statusLED = true;
             }
             lastPressed = millis();
         }

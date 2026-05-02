@@ -3,16 +3,6 @@
 #include "../datastruct/dataTypes.h"
 #include "../sdCard/sdCard.h"
 
-// Select calculation mode: set NEW_REAR_CALC to 1 for ISR-timestamp method,
-// or set OLD_REAR_CALC to 1 to use legacy EMA window approach.
-#ifndef NEW_REAR_CALC
-#define NEW_REAR_CALC 1
-#endif
-#ifndef OLD_REAR_CALC
-#define OLD_REAR_CALC 0
-#endif
-
-
 volatile uint32_t PRIM_hall_count       = 0;
 volatile uint32_t REAR_SPEED_hall_count = 0;
 
@@ -39,6 +29,7 @@ int REAR_SPEED_int = 0;
 int PRIM_rpm = 0;
 
 #define STOPPED_TIMEOUT_US 3000000UL //3 seconds 
+//TODO : The timeout here isn't working correctly it seems, getting the occasional 0 rpm, you can probably just remove the stopped detection all together if desired.
 
 void rpmCalc() {
     if (!EN_RPM) return;
@@ -69,7 +60,6 @@ void rpmCalc() {
     }
 
     // -------------------- REAR SPEED --------------------------------------
-#if NEW_REAR_CALC
     noInterrupts();
     uint32_t      rearCount   = REAR_SPEED_hall_count;
     unsigned long rearFirst   = REAR_SPEED_first_pulse;
@@ -96,40 +86,6 @@ void rpmCalc() {
         buffPush(REAR_SPEED, 0.0f);
         REAR_SPEED_stopped = true;
     }
-
-#elif OLD_REAR_CALC
-    noInterrupts();
-    uint32_t rearCount = REAR_SPEED_hall_count;
-    interrupts();
-
-    if (rearCount > HALL_THRESH) {
-        unsigned long rearEnd     = micros();
-        unsigned long rearElapsed = rearEnd - REAR_SPEED_start;
-
-        if (REAR_SPEED_stopped) REAR_SPEED_stopped = false;
-
-        avgRearSpeedPulse = avgRearSpeedPulse * 0.9f + (float)rearElapsed * 0.1f;
-        float periodSec = avgRearSpeedPulse / 1000000.0f;
-        float rpm = 0.0f;
-        if (periodSec > 1e-6f) {
-            rpm = (rearCount * 60.0f / periodSec) / Rear_speed_counts_per_rotation;
-            rpm *= REAR_GEAR_RATIO;
-        }
-        REAR_SPEED_rpm = rpm;
-        REAR_SPEED_int = (int)(rpm + 0.5f);
-        buffPush(REAR_SPEED, rpm);
-
-        noInterrupts();
-        REAR_SPEED_hall_count = 0;
-        interrupts();
-        REAR_SPEED_start = micros();
-    } else if (!REAR_SPEED_stopped && (now - REAR_SPEED_last_pulse_time >= STOPPED_TIMEOUT_US)) {
-        REAR_SPEED_rpm = 0.0f;
-        REAR_SPEED_int = 0;
-        buffPush(REAR_SPEED, 0.0f);
-        REAR_SPEED_stopped = true;
-    }
-#endif
 }
 
 void incrementHall_PRIM() {

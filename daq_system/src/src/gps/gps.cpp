@@ -127,9 +127,7 @@ void handleGPS() {
             timezoneAdjust(GPS_year, GPS_month, GPS_day, GPS_hour);
             Serial.println("GPS fix found");
 
-            digitalWrite(STATUS_PIN, HIGH);
-            delay(1000);
-            statusLED = true;
+            //delay(1000); //fix is found here? so why delay
         }
         gps_active = true;
     }

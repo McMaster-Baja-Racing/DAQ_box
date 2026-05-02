@@ -4,7 +4,6 @@
 #include "RingBuff.h"
 
 // Definitions
-#define STATUS_PIN 28
 #define dataBufferSize 10240
 
 typedef struct dataStruct_t
@@ -25,13 +24,9 @@ extern RingBuff<dataStruct, dataBufferSize> *savingBuff;
 extern RingBuff<dataStruct, dataBufferSize> *sdBuff;
 extern dataStruct temp;
 
-extern File bajaData;
-
-extern bool statusLED;
 extern bool EN_SEROUT;
 extern bool USE_SD;
 
-extern bool EN_FAST_SD;
 extern FsFile bajaDataFast;
 
 // Function Declarations
