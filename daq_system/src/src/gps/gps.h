@@ -6,7 +6,8 @@
 
 // Definitions
 #define GPSSerial Serial2 
-#define GPS_INTERVAL 100 // 40 ms 25hz, use 100 for 10 hz.
+// should not be used if using autoPVT, the navfreq will handle the timing currently set to 0 to disable
+#define GPS_INTERVAL 0 // 40 ms 25hz, use 100 for 10 hz.
 
 // Declarations
 //extern Adafruit_GPS GPS;
