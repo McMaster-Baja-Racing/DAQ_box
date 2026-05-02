@@ -2,7 +2,7 @@
 #include "../datastruct/dataTypeNames.h"
 
 // Definitions
-#define Rear_speed_counts_per_rotation 4 //using 4 as temp fix, maybe incccreases lowspeed sampling. //This is for s3, which has 16 teeth, the ration from this to the secondary RPM is ___
+#define Rear_speed_counts_per_rotation 16 // 16 teeth on s3
 #define Prim_counts_per_rotation 4
 // Gear ratio from the s3 gear to the secondary (apply to recorded rear RPM)
 #define REAR_GEAR_RATIO (40.0f/15.0f)
