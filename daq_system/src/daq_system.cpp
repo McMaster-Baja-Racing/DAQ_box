@@ -17,9 +17,7 @@ void setup() {
 
     Serial.println("Setup Starting");
 
-    // Set up LED Strip
     initializeStatusLED();
-    //delay(50);
 
     pinMode(REAR_SPEED_HALL_PIN, INPUT);
     pinMode(PRIM_HALL_PIN, INPUT);
@@ -29,7 +27,6 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(PRIM_HALL_PIN), incrementHall_PRIM,
                     RISING);
 
-    
     // new gps setup using ublox:
     GPSSerial.begin(38400);  // defaults to 38400 on uart, you can try turning this up.
     if (!myGNSS.begin(GPSSerial)) {
@@ -43,13 +40,12 @@ void setup() {
         Serial.println("GPS serial started");
         Serial.println(myGNSS.setUART1Output(COM_TYPE_UBX));
         Serial.println(myGNSS.setNavigationFrequency(10));  // the gps runs 10hz - no, gavin
-        Serial.println(myGNSS.setAutoPVT(true));            // automatic PVT updates
+        Serial.println(myGNSS.setAutoPVT(true));            // automatic PVT updates, shouldn't need any interval timer this way
         //try setting max wait if you're gonna use blocking, might reduce the time.
         Serial.println(myGNSS
             .saveConfiguration());  // Save the current settings to flash and BBR
     }
 
-    // SD Card Setup
     if (USE_SD) {
        
         // note, DMA_SDIO was slower, but might be useful in the future
@@ -61,12 +57,10 @@ void setup() {
             SdFile::dateTimeCallback(dateTime);
             updateFileStatus(FILE_STATUS_WAITING_FOR_GPS);
         }
-
         // delay(500); //don't think this is needed either.
     }
 
     Serial.println("Setup Finished");
-
     // delay(1000); Same deal, probably not needed.
 }
 
