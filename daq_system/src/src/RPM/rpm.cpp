@@ -21,11 +21,8 @@ bool EN_RPM = true;
 bool PRIM_stopped = false;
 bool REAR_SPEED_stopped = false;
 
-float avgRearSpeedPulse = 0.0f;
-unsigned long REAR_SPEED_start = micros();
 
 float REAR_SPEED_rpm = 0.0f;
-int REAR_SPEED_int = 0;
 int PRIM_rpm = 0;
 
 #define STOPPED_TIMEOUT_US 3000000UL //3 seconds 
@@ -76,13 +73,11 @@ void rpmCalc() {
             // apply gear ratio to convert sensor gear RPM to measured secondary RPM
             rpm *= REAR_GEAR_RATIO;
             REAR_SPEED_rpm = rpm;
-            REAR_SPEED_int = (int)(rpm + 0.5f);
             buffPush(REAR_SPEED, rpm);
             REAR_SPEED_stopped = false;
         }
     } else if (!REAR_SPEED_stopped && (now - REAR_SPEED_last_pulse_time >= STOPPED_TIMEOUT_US)) {
         REAR_SPEED_rpm = 0.0f;
-        REAR_SPEED_int = 0;
         buffPush(REAR_SPEED, 0.0f);
         REAR_SPEED_stopped = true;
     }
