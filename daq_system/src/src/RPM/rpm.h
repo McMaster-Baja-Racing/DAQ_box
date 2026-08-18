@@ -25,20 +25,10 @@ extern volatile unsigned long REAR_SPEED_first_pulse;
 extern volatile unsigned long REAR_SPEED_last_pulse;
 extern volatile bool REAR_SPEED_window_started;
 
-// last pulse times for stopped detection
-extern volatile unsigned long PRIM_last_pulse_time;
-extern volatile unsigned long REAR_SPEED_last_pulse_time;
-
-// legacy/compatibility values
-extern unsigned long REAR_SPEED_start; // used by old calc only
-
 // output variables (keep an int copy for existing code but publish float RPM)
 extern float REAR_SPEED_rpm;
 extern int REAR_SPEED_int;
 extern int PRIM_rpm;
-
-// EMA state used by old calc
-extern float avgRearSpeedPulse;
 
 // Function Declarations
 void rpmCalc();
