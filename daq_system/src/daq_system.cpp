@@ -47,6 +47,7 @@ void setup() {
         Serial.println(myGNSS.setUART1Output(COM_TYPE_UBX));
         Serial.println(myGNSS.setNavigationFrequency(10));  // the gps runs 10hz - no, gavin
         Serial.println(myGNSS.setAutoPVT(true));            // automatic PVT updates
+        myGNSS.setAutoPVTcallbackPtr(&gpsPVTCallback);
         //try setting max wait 
         Serial.println(myGNSS
             .saveConfiguration());  // Save the current settings to flash and BBR
@@ -119,7 +120,7 @@ void loop() {
     setHUD();
 
     //-------------GPS Data---------------------
-    if (ENABLE_PROFILING) {
+    if (ENABLE_PROFILING || ENABLE_GPS_PROFILING) {
         Serial.printf("%d: gps\n", millis());
     }
     gps();

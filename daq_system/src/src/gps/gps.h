@@ -35,6 +35,8 @@ void timezoneAdjust(uint16_t &year, uint8_t &month, uint8_t &day, uint8_t &hour)
 
 void dateTime(uint16_t* date, uint16_t* time);
 
+void gpsPVTCallback(UBX_NAV_PVT_data_t *pvt);
+
 //void gpsMessage();
 
 void handleGPS();

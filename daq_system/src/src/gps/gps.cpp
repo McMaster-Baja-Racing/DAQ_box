@@ -30,6 +30,12 @@ bool gps_active = false;
 
 float gps_speed = 0.0f;
 
+volatile bool newGPSData = false;
+
+void gpsPVTCallback(UBX_NAV_PVT_data_t *pvt) {
+    newGPSData = true;
+}
+
 void timezoneAdjust(uint16_t& year, uint8_t& month, uint8_t& day,
                     uint8_t& hour) {
     // Make a signed copy for calculation
@@ -178,25 +184,42 @@ void gpsData() {
 }
 
 void gps() {
+
+    myGNSS.checkUblox();
+    myGNSS.checkCallbacks();
+
     if (millis() - gpsTimer < (GPS_INTERVAL - 1)) {
-        // Wait for the next interval
-        return;
+        //return;
     }
 
     gpsTimer = millis();
 
-    if (ENABLE_PROFILING) {
+    if (ENABLE_PROFILING || ENABLE_GPS_PROFILING) {
         Serial.printf("\t%d: getPVT\n", millis());
     }
-    bool newInfo = myGNSS.getPVT();  // Continuously check for new GPS data.
+
+    bool newInfo = myGNSS.getPVT(1);  // Continuously check for new GPS data.
+
     if(!newInfo) {
-        return;
+       //return;
+       Serial.println("no info");
     }
-    if (ENABLE_PROFILING) {
+    else {
+        Serial.println("\nNEW INFO RECEIVED\n");
+    }
+
+    /*if(!newGPSData) {
+       //return;
+       Serial.println("no info");
+    }
+    else {
+        Serial.println("\nNEW INFO RECEIVED\n");
+    }*/
+    if (ENABLE_PROFILING || ENABLE_GPS_PROFILING) {
         Serial.printf("\t%d: handleGPS\n", millis());
     }
     handleGPS();
-    if (ENABLE_PROFILING) {
+    if (ENABLE_PROFILING || ENABLE_GPS_PROFILING) {
         Serial.printf("\t%d: gpsData\n", millis());
     }
     gpsData();
