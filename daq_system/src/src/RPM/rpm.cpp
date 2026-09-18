@@ -63,7 +63,7 @@ void rpmCalc() {
             buffPush(RPM_PRIM, rpm);
             PRIM_stopped = false;
         }
-    } else if (!PRIM_stopped && (now - PRIM_last_pulse_time >= STOPPED_TIMEOUT_US)) {
+    } else if (!PRIM_stopped && (micros() - PRIM_last_pulse_time >= STOPPED_TIMEOUT_US)) {
         buffPush(RPM_PRIM, 0.0f);
         PRIM_stopped = true;
     }
@@ -90,7 +90,7 @@ void rpmCalc() {
             buffPush(REAR_SPEED, rpm);
             REAR_SPEED_stopped = false;
         }
-    } else if (!REAR_SPEED_stopped && (now - REAR_SPEED_last_pulse_time >= STOPPED_TIMEOUT_US)) {
+    } else if (!REAR_SPEED_stopped && (micros() - REAR_SPEED_last_pulse_time >= STOPPED_TIMEOUT_US)) {
         REAR_SPEED_rpm = 0.0f;
         REAR_SPEED_int = 0;
         buffPush(REAR_SPEED, 0.0f);
